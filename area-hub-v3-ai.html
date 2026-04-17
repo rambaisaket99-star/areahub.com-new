@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Area</title>
+<style>
+  :root{
+    --bg:#f6f4ef;
+    --bg2:#efede7;
+    --surface:#ffffff;
+    --surface2:#fbfaf7;
+    --line:#ddd8cc;
+    --line2:#cfc9bb;
+    --text:#161613;
+    --muted:#64625b;
+    --muted2:#8a877f;
+    --accent:#5f8fe6;
+    --accent2:#99baf4;
+    --good:#2f8f57;
+    --warn:#9a6a11;
+    --bad:#b4493b;
+    --shadow:0 18px 48px rgba(22,22,19,.06);
+    --radius:18px;
+    --radius2:14px;
+    --sidebar:270px;
+    --topbar:70px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --sans:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:var(--sans);background:radial-gradient(circle at top left, rgba(153,186,244,.10), transparent 24%), var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
+  a{color:inherit;text-decoration:none}
+  button,input,select,textarea{font:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#d7d2c6;border:2px solid transparent;border-radius:999px;background-clip:content-box}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  .app{display:flex;height:100vh;width:100vw;overflow:hidden}
+
+  .sidebar{width:var(--sidebar);background:rgba(255,255,255,.64);backdrop-filter:blur(18px);border-right:1px solid rgba(221,216,204,.85);display:flex;flex-direction:column;flex-shrink:0}
+  .side-top{padding:18px 16px 12px;border-bottom:1px solid rgba(221,216,204,.65)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:38px;height:38px;flex:0 0 38px}
+  .brand-name{font-size:18px;font-weight:650;letter-spacing:-.04em;line-height:1}
+  .brand-sub{margin-top:4px;font-size:12px;color:var(--muted)}
+  .workspace{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,246,241,.9));}
+  .workspace strong{font-size:13px}
+  .workspace span{font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#eef3ff;border:1px solid #d6e0fb;color:#3d64bd}
+
+  .nav{padding:12px 10px 14px;overflow:auto;flex:1}
+  .section-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#969189;padding:13px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;color:#4d4b45;cursor:pointer;transition:transform .15s ease, background .15s ease, color .15s ease;position:relative}
+  .nav-item:hover{background:rgba(255,255,255,.72);color:var(--text);transform:translateX(1px)}
+  .nav-item.active{background:linear-gradient(180deg, #ffffff, #f5f3ed);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.03);font-weight:600}
+  .nav-item.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent)}
+  .nav-icon{width:18px;height:18px;flex:0 0 18px;opacity:.72}
+  .badge{margin-left:auto;font-size:11px;font-weight:700;padding:4px 7px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#57544d}
+  .badge.blue{background:#eef4ff;color:#3d64bd;border-color:#d8e4ff}
+  .badge.green{background:#eef8f1;color:var(--good);border-color:#d9efe0}
+  .side-footer{padding:12px 12px 16px;border-top:1px solid rgba(221,216,204,.7)}
+  .profile{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.72), rgba(248,246,241,.72));border:1px solid var(--line)}
+  .avatar{width:32px;height:32px;border-radius:50%;background:#ece9e1;border:1px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:12px;color:#5f5b53}
+  .profile b{display:block;font-size:13px;line-height:1.2}
+  .profile small{display:block;font-size:11px;color:var(--muted)}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:var(--topbar);flex:0 0 var(--topbar);display:flex;align-items:center;gap:14px;padding:0 22px;border-bottom:1px solid rgba(221,216,204,.7);background:rgba(246,244,239,.72);backdrop-filter:blur(16px);position:sticky;top:0;z-index:30}
+  .menu-btn{display:none;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.7);cursor:pointer}
+  .crumbs{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crumbs strong{color:var(--text)}
+  .top-actions{display:flex;align-items:center;gap:10px}
+  .search{width:min(440px,40vw);display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.82);box-shadow:0 1px 0 rgba(255,255,255,.7) inset}
+  .search input{width:100%;border:none;outline:none;background:transparent;color:var(--text)}
+  .search input::placeholder{color:#9b988f}
+  .btn{border:none;cursor:pointer;border-radius:14px;padding:11px 14px;font-weight:600;transition:transform .15s ease, box-shadow .15s ease, background .15s ease}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.soft{background:#fff;border:1px solid var(--line);color:var(--text)}
+  .btn.primary{background:linear-gradient(180deg, #6f97ea, #5f8fe6);color:#fff;box-shadow:0 10px 24px rgba(95,143,230,.18)}
+  .btn.icon{width:42px;height:42px;padding:0;display:grid;place-items:center;background:#fff;border:1px solid var(--line)}
+
+  .content{flex:1;overflow:auto;padding:24px 24px 34px}
+  .page{display:none;animation:in .22s ease both}
+  .page.active{display:block}
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .hero{background:linear-gradient(180deg, rgba(255,255,255,.88), rgba(251,250,246,.92));border:1px solid rgba(221,216,204,.78);border-radius:28px;box-shadow:var(--shadow);padding:26px;overflow:hidden;position:relative}
+  .hero::after{content:"";position:absolute;inset:auto -120px -120px auto;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle, rgba(153,186,244,.22), transparent 68%);pointer-events:none}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7d7a72}
+  h1{margin:8px 0 10px;font-size:40px;line-height:1.02;letter-spacing:-.05em}
+  .hero p{margin:0;max-width:760px;color:var(--muted);font-size:15px;line-height:1.75}
+  .hero-side{display:flex;flex-direction:column;gap:10px;min-width:240px;align-items:flex-end}
+  .hero-kpi{padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.88);min-width:220px}
+  .hero-kpi small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+  .hero-kpi b{font-size:18px;letter-spacing:-.03em}
+  .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+  .grid{display:grid;gap:16px;margin-top:18px}
+  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{background:rgba(255,255,255,.88);border:1px solid rgba(221,216,204,.78);border-radius:22px;box-shadow:0 8px 24px rgba(22,22,19,.04);overflow:hidden}
+  .card.pad{padding:18px}
+  .card-head{padding:18px 18px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(221,216,204,.64)}
+  .card-head h3{margin:0;font-size:16px;letter-spacing:-.03em}
+  .card-head p{margin:4px 0 0;color:var(--muted);font-size:13px;line-height:1.55}
+  .card-body{padding:18px}
+
+  .metric{padding:18px;border-radius:22px;background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(250,248,242,.88));border:1px solid rgba(221,216,204,.8)}
+  .metric small{display:block;color:var(--muted);font-size:12px;margin-bottom:10px}
+  .metric strong{display:block;font-size:30px;letter-spacing:-.05em;line-height:1}
+  .metric span{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--muted)}
+  .delta.up{color:var(--good)}
+  .delta.down{color:var(--bad)}
+
+  .list{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(251,250,247,.94);border:1px solid rgba(221,216,204,.78)}
+  .row .left{min-width:0}
+  .row .left b{display:block;font-size:13px;line-height:1.25}
+  .row .left small{display:block;color:var(--muted);font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .row .right{font-size:12px;color:var(--muted)}
+
+  .topic{padding:18px;border-radius:18px;border:1px solid rgba(221,216,204,.8);background:linear-gradient(180deg, rgba(255,255,255,.94), rgba(249,247,242,.92));transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;cursor:pointer;min-height:126px}
+  .topic:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:#cfc7b6}
+  .topic svg{width:22px;height:22px;opacity:.72}
+  .topic h4{margin:12px 0 6px;font-size:15px;letter-spacing:-.03em}
+  .topic p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:6px;background:rgba(239,237,231,.9);border:1px solid rgba(221,216,204,.8);border-radius:16px;width:fit-content}
+  .tab{padding:9px 13px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--muted);font-weight:600;cursor:pointer;transition:background .15s ease, color .15s ease, transform .15s ease}
+  .tab.active{background:#fff;color:var(--text);border-color:var(--line);box-shadow:0 6px 16px rgba(0,0,0,.04)}
+
+  .table-wrap{overflow:auto;border-radius:18px;border:1px solid rgba(221,216,204,.78)}
+  table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.92)}
+  th,td{padding:13px 14px;border-bottom:1px solid rgba(221,216,204,.65);text-align:left;font-size:13px;vertical-align:top}
+  th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d887f;background:#f7f5ef}
+  tr:last-child td{border-bottom:none}
+
+  .input,.select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:14px;background:#fff;outline:none;color:var(--text)}
+  .input:focus,.select:focus,textarea:focus{border-color:#bdd0fb;box-shadow:0 0 0 4px rgba(95,143,230,.08)}
+  .label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#807b71;margin-bottom:7px}
+  .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+  .code{font-family:var(--mono);font-size:12px;background:#111319;color:#e8edf7;border-radius:18px;padding:18px;overflow:auto;border:1px solid rgba(255,255,255,.06)}
+  .code-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .code-header b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a7b4d3}
+  .copy{padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+  .copy.done{background:rgba(47,143,87,.18);border-color:rgba(47,143,87,.35)}
+  pre{margin:0;font-family:var(--mono);line-height:1.7;white-space:pre-wrap;word-break:break-word}
+
+  .hero-mini{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(221,216,204,.78);background:rgba(255,255,255,.9)}
+  .mini-dot{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(95,143,230,.14)}
+  .live-badge{display:flex;align-items:center;gap:8px;margin-left:auto;padding:8px 10px;border-radius:14px;border:1px solid rgba(221,216,204,.72);background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(22,22,19,.04);min-width:0;flex:0 0 auto}
+  .live-badge .live-label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;line-height:1}
+  .live-badge .live-clock{font-size:12px;color:var(--muted);line-height:1.2;white-space:nowrap}
+  .live-badge .mini-dot{width:8px;height:8px;box-shadow:0 0 0 3px rgba(95,143,230,.14)}
+  .muted{color:var(--muted)}
+
+  .drawer-backdrop{display:none}
+  .toast{position:fixed;right:18px;bottom:18px;background:#1d1e22;color:#fff;padding:12px 14px;border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.18);opacity:0;transform:translateY(10px);pointer-events:none;transition:all .18s ease;z-index:90}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(18,18,16,.28);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
+  .modal-backdrop.open{display:flex}
+  .modal{width:min(640px,100%);background:rgba(255,255,255,.96);border:1px solid rgba(221,216,204,.86);border-radius:26px;box-shadow:var(--shadow);overflow:hidden}
+  .modal .head{padding:18px 20px;border-bottom:1px solid rgba(221,216,204,.66);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .modal .head b{font-size:16px}
+  .modal .body{padding:18px 20px}
+
+  .empty{padding:24px;border-radius:20px;background:rgba(255,255,255,.9);border:1px dashed rgba(207,201,187,.95);text-align:center;color:var(--muted)}
+
+  @media (max-width: 1180px){
+    .grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width: 920px){
+    body{overflow:auto}
+    .app{overflow:auto}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-104%);transition:transform .22s ease;z-index:60;box-shadow:24px 0 60px rgba(0,0,0,.12)}
+    .sidebar.open{transform:translateX(0)}
+    .drawer-backdrop{display:block;position:fixed;inset:0;background:rgba(18,18,16,.28);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50}
+    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+    .menu-btn{display:inline-grid}
+    .top-actions .search{width:min(52vw,320px)}
+    .content{padding:18px}
+    h1{font-size:34px}
+    .hero-top{flex-direction:column}
+    .hero-side{align-items:flex-start}
+    .grid.cols-4,.grid.cols-3,.grid.cols-2,.form-grid{grid-template-columns:1fr}
+  }
+  /* ── Pricing page ── */
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:4px}
+  .price-card{position:relative;padding:26px;border-radius:24px;border:1px solid rgba(221,216,204,.78);background:#fff;color:#111;overflow:hidden;box-shadow:0 22px 60px rgba(22,22,19,.08)}
+  .price-card.pc-dark{background:#0f0f0d;color:#f5f5f3;border-color:rgba(255,255,255,.10);box-shadow:0 22px 60px rgba(0,0,0,.32)}
+  .price-tag{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;background:#111;color:#fff}
+  .pc-dark .price-tag{background:#fff;color:#0f0f0d}
+  .plan-name{margin:14px 0 6px;font-size:26px;letter-spacing:-.04em;font-weight:800}
+  .price-row{display:flex;align-items:flex-end;gap:3px;margin:8px 0 12px}
+  .price-sym{font-size:18px;opacity:.65;padding-bottom:5px}
+  .price-amt{font-size:54px;font-weight:800;line-height:.95;letter-spacing:-.06em}
+  .price-per{font-size:13px;color:#777;padding-bottom:8px}
+  .pc-dark .price-per{color:rgba(255,255,255,.55)}
+  .price-desc{color:#666;font-size:13px;line-height:1.7}
+  .pc-dark .price-desc{color:rgba(255,255,255,.58)}
+  .feat-list{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+  .feat-list li{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.6}
+  .feat-check{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:0 0 18px;background:currentColor;font-size:11px;font-weight:900;opacity:.9}
+  .feat-check span{color:#fff}
+  .pc-dark .feat-check span{color:#0f0f0d}
+  .price-cta{width:100%;margin-top:20px;border:none;border-radius:16px;padding:14px 16px;background:#111;color:#fff;font-weight:800;cursor:pointer;font-size:14px;transition:opacity .15s ease}
+  .price-cta:hover{opacity:.85}
+  .pc-dark .price-cta{background:#fff;color:#111}
+  .price-cta.outline{background:transparent;border:1px solid currentColor;color:inherit}
+  .pc-dark .price-cta.outline{border-color:rgba(255,255,255,.22)}
+  .price-ribbon{position:absolute;top:16px;right:-46px;transform:rotate(28deg);background:#fff;color:#111;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:8px 56px;pointer-events:none}
+  .pc-dark .price-ribbon{background:#f5f5f3;color:#111}
+  .price-note{margin-top:18px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.84);border:1px solid rgba(221,216,204,.78);color:var(--muted);font-size:13px;line-height:1.7}
+  .pricing-compare{margin-top:28px}
+  .pricing-compare h3{margin:0 0 14px;font-size:16px;letter-spacing:-.03em}
+  .compare-table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.9);border-radius:18px;overflow:hidden;border:1px solid rgba(221,216,204,.78)}
+  .compare-table th,.compare-table td{padding:13px 16px;border-bottom:1px solid rgba(221,216,204,.65);font-size:13px;text-align:left}
+  .compare-table th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d887f;background:#f7f5ef}
+  .compare-table tr:last-child td{border-bottom:none}
+  .chk{color:var(--good);font-weight:800}
+  .dash{color:var(--muted2)}
+
+  @media (max-width: 920px){.pricing-grid{grid-template-columns:1fr}}
+
+  @media (max-width: 560px){
+    .topbar{padding:0 14px;gap:10px}
+    .top-actions .search{display:none}
+    .hero{padding:20px;border-radius:24px}
+    h1{font-size:30px}
+    .hero p{font-size:14px}
+    .card-head,.card-body,.metric,.topic{padding:16px}
+    .hero-actions{flex-direction:column}
+    .btn{width:100%;justify-content:center}
+  }
+
+  /* ─────────────────────────────────────────
+     AI CHAT — Mode cards (page-ai)
+  ───────────────────────────────────────── */
+  .ai-modes-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
+  .ai-mode-card{border-radius:26px;overflow:hidden;cursor:pointer;position:relative;transition:transform .2s ease,box-shadow .2s ease;user-select:none;-webkit-tap-highlight-color:transparent}
+  .ai-mode-card:hover{transform:translateY(-4px)}
+  .ai-mode-card:active{transform:scale(.98)}
+  .ai-mode-card .tap-hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.5;transition:opacity .2s ease}
+  .ai-mode-card:hover .tap-hint{opacity:.9}
+  .ai-card-inner{padding:28px 26px 52px}
+  .ai-card-logo{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;margin-bottom:16px;font-size:22px;font-weight:900;line-height:1}
+  .ai-card-name{font-size:24px;font-weight:800;letter-spacing:-.04em;margin:0 0 4px}
+  .ai-card-maker{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:16px}
+  .ai-card-desc{font-size:13px;line-height:1.75;opacity:.72;margin-bottom:20px}
+  .ai-card-model{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;border:1px solid currentColor;opacity:.65}
+  .ai-card-stats{display:flex;gap:14px;margin-top:18px}
+  .ai-card-stat{display:flex;flex-direction:column;gap:3px}
+  .ai-card-stat b{font-size:16px;font-weight:800;letter-spacing:-.03em}
+  .ai-card-stat small{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.5}
+
+  /* ChatGPT theme (dark) */
+  .ai-mode-card.theme-gpt{background:#0d0d0d;color:#ececec;box-shadow:0 22px 60px rgba(0,0,0,.4)}
+  .ai-mode-card.theme-gpt .ai-card-logo{background:#10a37f22;color:#10a37f}
+  .ai-mode-card.theme-gpt .tap-hint{color:#10a37f}
+  .ai-mode-card.theme-gpt .ai-card-model{color:#10a37f;border-color:#10a37f55}
+  .ai-mode-card.theme-gpt::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%, rgba(16,163,127,.12),transparent 55%);pointer-events:none}
+
+  /* Claude theme (warm) */
+  .ai-mode-card.theme-claude{background:linear-gradient(180deg,#faf8f3,#f5f0e8);color:#1c1814;box-shadow:0 22px 60px rgba(180,100,50,.14)}
+  .ai-mode-card.theme-claude .ai-card-logo{background:#d4652a22;color:#d4652a}
+  .ai-mode-card.theme-claude .tap-hint{color:#d4652a}
+  .ai-mode-card.theme-claude .ai-card-model{color:#d4652a;border-color:#d4652a55}
+  .ai-mode-card.theme-claude::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 80%, rgba(212,101,42,.1),transparent 55%);pointer-events:none}
+
+  /* DeepSeek theme (navy) */
+  .ai-mode-card.theme-ds{background:linear-gradient(160deg,#0a0f1e,#0d1629);color:#e2e8f0;box-shadow:0 22px 60px rgba(10,15,40,.55)}
+  .ai-mode-card.theme-ds .ai-card-logo{background:#1d6ce022;color:#4d9bf5}
+  .ai-mode-card.theme-ds .tap-hint{color:#4d9bf5}
+  .ai-mode-card.theme-ds .ai-card-model{color:#4d9bf5;border-color:#4d9bf555}
+  .ai-mode-card.theme-ds::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0%, rgba(29,108,224,.18),transparent 55%);pointer-events:none}
+
+  .ai-pulse{display:inline-block;width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
+  .ai-pulse.green{background:#10a37f;box-shadow:0 0 0 4px rgba(16,163,127,.18)}
+  .ai-pulse.orange{background:#d4652a;box-shadow:0 0 0 4px rgba(212,101,42,.18)}
+  .ai-pulse.blue{background:#4d9bf5;box-shadow:0 0 0 4px rgba(77,155,245,.18)}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+
+  /* ─────────────────────────────────────────
+     AI CHAT — Full screen overlay
+  ───────────────────────────────────────── */
+  .ai-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);will-change:transform}
+  .ai-overlay.open{transform:translateY(0)}
+
+  /* GPT overlay */
+  .ai-overlay.ov-gpt{background:#212121;color:#ececec;--ov-accent:#10a37f;--ov-user-bg:#2f2f2f;--ov-user-color:#ececec;--ov-ai-color:#ececec;--ov-input-bg:#2f2f2f;--ov-border:rgba(255,255,255,.09);--ov-topbar:#171717;--ov-topbar-border:rgba(255,255,255,.08);--ov-scrollbar:#3c3c3c;--ov-copy-bg:rgba(255,255,255,.07);--ov-code-bg:#1a1a1a}
+  /* Claude overlay */
+  .ai-overlay.ov-claude{background:#faf9f5;color:#1c1917;--ov-accent:#d4652a;--ov-user-bg:#1c1917;--ov-user-color:#faf9f5;--ov-ai-color:#1c1917;--ov-input-bg:#fff;--ov-border:rgba(0,0,0,.09);--ov-topbar:#fff;--ov-topbar-border:rgba(0,0,0,.07);--ov-scrollbar:#d5cec0;--ov-copy-bg:rgba(0,0,0,.05);--ov-code-bg:#f0ede6}
+  /* DeepSeek overlay */
+  .ai-overlay.ov-ds{background:#0e1117;color:#e2e8f0;--ov-accent:#4d9bf5;--ov-user-bg:#1c2333;--ov-user-color:#e2e8f0;--ov-ai-color:#e2e8f0;--ov-input-bg:#1c2333;--ov-border:rgba(255,255,255,.08);--ov-topbar:#0a0d14;--ov-topbar-border:rgba(255,255,255,.06);--ov-scrollbar:#2d3748;--ov-copy-bg:rgba(255,255,255,.06);--ov-code-bg:#111827}
+
+  .ov-topbar{height:64px;flex:0 0 64px;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--ov-topbar);border-bottom:1px solid var(--ov-topbar-border)}
+  .ov-ai-info{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+  .ov-ai-logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:16px;font-weight:900;background:var(--ov-user-bg);border:1px solid var(--ov-border);flex:0 0 38px}
+  .ov-ai-name{font-size:15px;font-weight:700;letter-spacing:-.02em}
+  .ov-ai-model{font-size:11px;opacity:.5;margin-top:2px;font-weight:600}
+  .ov-close-btn{width:38px;height:38px;border:1px solid var(--ov-border);border-radius:12px;background:var(--ov-copy-bg);color:inherit;cursor:pointer;display:grid;place-items:center;font-size:16px;transition:background .15s ease}
+  .ov-close-btn:hover{background:var(--ov-user-bg)}
+  .ov-url-btn{width:38px;height:38px;border:1px solid var(--ov-border);border-radius:12px;background:var(--ov-copy-bg);color:inherit;cursor:pointer;display:grid;place-items:center;font-size:14px;transition:background .15s ease}
+  .ov-url-btn:hover{background:var(--ov-user-bg)}
+  .ov-url-btn.active{background:var(--ov-accent);border-color:var(--ov-accent);color:#fff}
+
+  .ov-url-bar{overflow:hidden;max-height:0;transition:max-height .25s ease,padding .25s ease;background:var(--ov-topbar);border-bottom:1px solid transparent}
+  .ov-url-bar.open{max-height:80px;border-bottom-color:var(--ov-border)}
+  .ov-url-inner{display:flex;align-items:center;gap:10px;padding:10px 18px}
+  .ov-url-input{flex:1;border:1px solid var(--ov-border);border-radius:12px;background:var(--ov-input-bg);color:inherit;padding:10px 13px;outline:none;font-size:13px}
+  .ov-url-input::placeholder{opacity:.4}
+  .ov-url-input:focus{border-color:var(--ov-accent)}
+  .ov-url-fetch-btn{padding:10px 14px;border:none;border-radius:12px;background:var(--ov-accent);color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+
+  .ov-url-preview{margin:0 18px 14px;border:1px solid var(--ov-border);border-radius:18px;overflow:hidden;display:none;animation:in .18s ease}
+  .ov-url-preview.visible{display:flex}
+  .ov-preview-img{width:80px;height:70px;object-fit:cover;flex-shrink:0;background:var(--ov-user-bg)}
+  .ov-preview-text{padding:12px 14px;min-width:0}
+  .ov-preview-title{font-size:13px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ov-preview-desc{font-size:12px;opacity:.55;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ov-preview-domain{font-size:11px;opacity:.4;margin-top:6px;font-weight:600}
+  .ov-preview-close{flex-shrink:0;padding:8px 12px;opacity:.5;cursor:pointer;font-size:16px;align-self:flex-start}
+  .ov-preview-close:hover{opacity:1}
+
+  .ov-messages{flex:1;overflow-y:auto;padding:24px 0;display:flex;flex-direction:column;gap:6px;scroll-behavior:smooth}
+  .ov-messages::-webkit-scrollbar{width:6px}
+  .ov-messages::-webkit-scrollbar-thumb{background:var(--ov-scrollbar);border-radius:999px}
+  .ov-messages::-webkit-scrollbar-track{background:transparent}
+
+  .ov-msg-wrap{padding:0 5% ;max-width:860px;margin:0 auto;width:100%}
+  .ov-msg{display:flex;gap:12px;align-items:flex-start;padding:0 0 4px}
+  .ov-msg.user{flex-direction:row-reverse}
+  .ov-msg-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 32px;background:var(--ov-user-bg);color:var(--ov-user-color);border:1px solid var(--ov-border)}
+  .ov-msg.user .ov-msg-avatar{background:var(--ov-accent);border-color:transparent;color:#fff}
+  .ov-msg-bubble{max-width:80%;font-size:14px;line-height:1.8;letter-spacing:.01em}
+  .ov-msg.user .ov-msg-bubble{background:var(--ov-user-bg);color:var(--ov-user-color);padding:12px 16px;border-radius:20px 4px 20px 20px;word-break:break-word}
+  .ov-msg.ai .ov-msg-bubble{padding:8px 4px;word-break:break-word}
+  .ov-msg.ai .ov-msg-bubble p{margin:0 0 10px}
+  .ov-msg.ai .ov-msg-bubble p:last-child{margin:0}
+  .ov-msg.ai .ov-msg-bubble code{font-family:var(--mono);font-size:12px;background:var(--ov-code-bg);padding:2px 6px;border-radius:5px;border:1px solid var(--ov-border)}
+  .ov-msg.ai .ov-msg-bubble pre{background:var(--ov-code-bg);border:1px solid var(--ov-border);border-radius:14px;padding:14px 16px;overflow:auto;margin:10px 0}
+  .ov-msg.ai .ov-msg-bubble pre code{background:none;border:none;padding:0;font-size:12px}
+  .ov-msg.ai .ov-msg-bubble strong{font-weight:700}
+  .ov-msg.ai .ov-msg-bubble ul,
+  .ov-msg.ai .ov-msg-bubble ol{margin:8px 0;padding-left:20px}
+  .ov-msg.ai .ov-msg-bubble li{margin:4px 0}
+  .ov-msg.ai .ov-msg-bubble h1,.ov-msg.ai .ov-msg-bubble h2,.ov-msg.ai .ov-msg-bubble h3{margin:12px 0 6px;letter-spacing:-.02em}
+  .ov-msg.ai .ov-msg-bubble blockquote{border-left:3px solid var(--ov-accent);padding-left:12px;opacity:.75;margin:8px 0}
+
+  .ov-welcome{text-align:center;padding:48px 24px;opacity:.45}
+  .ov-welcome .ov-w-icon{font-size:48px;margin-bottom:16px}
+  .ov-welcome h3{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.03em}
+  .ov-welcome p{margin:0;font-size:14px;line-height:1.7;max-width:320px;margin:0 auto}
+
+  .ov-typing{display:flex;align-items:center;gap:10px;padding:0 5%;max-width:860px;margin:0 auto;width:100%}
+  .ov-typing-dots{display:flex;gap:5px;align-items:center;padding:12px 16px;background:var(--ov-user-bg);border-radius:20px;border:1px solid var(--ov-border)}
+  .ov-typing-dots span{width:7px;height:7px;border-radius:50%;background:currentColor;animation:typing-dot 1.4s infinite;opacity:.4}
+  .ov-typing-dots span:nth-child(2){animation-delay:.2s}
+  .ov-typing-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes typing-dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+  .ov-input-area{border-top:1px solid var(--ov-border);padding:14px 18px;background:var(--ov-topbar)}
+  .ov-input-wrap{display:flex;align-items:flex-end;gap:10px;max-width:860px;margin:0 auto;background:var(--ov-input-bg);border:1px solid var(--ov-border);border-radius:20px;padding:10px 10px 10px 16px;transition:border-color .15s ease}
+  .ov-input-wrap:focus-within{border-color:var(--ov-accent)}
+  .ov-chat-input{flex:1;border:none;outline:none;background:transparent;color:inherit;font-size:14px;line-height:1.6;resize:none;min-height:22px;max-height:120px;overflow-y:auto;padding:2px 0}
+  .ov-chat-input::placeholder{opacity:.35}
+  .ov-send-btn{width:38px;height:38px;border:none;border-radius:14px;background:var(--ov-accent);color:#fff;cursor:pointer;display:grid;place-items:center;flex:0 0 38px;transition:opacity .15s ease,transform .15s ease}
+  .ov-send-btn:hover{opacity:.88;transform:scale(1.04)}
+  .ov-send-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+  .ov-input-hint{text-align:center;font-size:11px;opacity:.3;margin-top:8px;max-width:860px;margin:8px auto 0}
+
+  .ov-new-chat-btn{padding:8px 14px;border:1px solid var(--ov-border);border-radius:12px;background:var(--ov-copy-bg);color:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s ease}
+  .ov-new-chat-btn:hover{background:var(--ov-user-bg)}
+
+  .ov-toast{position:absolute;top:16px;left:50%;transform:translateX(-50%) translateY(-10px);background:rgba(0,0,0,.8);color:#fff;padding:9px 16px;border-radius:12px;font-size:12px;font-weight:700;opacity:0;transition:all .18s ease;pointer-events:none;white-space:nowrap;z-index:10}
+  .ov-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* URL import section on page-ai */
+  .url-import-section{margin-top:28px;border-radius:22px;border:1px solid rgba(221,216,204,.78);background:rgba(255,255,255,.88);overflow:hidden}
+  .url-import-head{padding:18px 20px 14px;border-bottom:1px solid rgba(221,216,204,.64);display:flex;align-items:center;gap:12px}
+  .url-import-head h3{margin:0;font-size:15px;letter-spacing:-.02em}
+  .url-import-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .url-import-body{padding:18px 20px}
+  .url-result-cards{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .url-result-card{display:flex;gap:14px;border:1px solid rgba(221,216,204,.78);border-radius:16px;overflow:hidden;background:rgba(251,250,247,.94)}
+  .url-result-thumb{width:90px;height:70px;object-fit:cover;flex-shrink:0;background:#ece9e1}
+  .url-result-info{padding:12px 14px 12px 0;min-width:0;flex:1}
+  .url-result-title{font-size:13px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .url-result-desc{font-size:12px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .url-result-domain{font-size:11px;color:var(--muted2);margin-top:5px;font-weight:600}
+  .url-result-actions{display:flex;gap:8px;margin-top:8px}
+
+  @media (max-width: 920px){
+    .ai-modes-grid{grid-template-columns:1fr}
+  }
+  @media (max-width: 560px){
+    .ai-card-inner{padding:22px 20px 48px}
+    .ai-card-name{font-size:20px}
+    .ov-msg-wrap{padding:0 14px}
+    .ov-msg-bubble{max-width:90%}
+  }
+</style>
+</head>
+<body>
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleSidebar(false)"></div>
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="head">
+        <b id="modalTitle">Create</b>
+        <button class="btn icon" onclick="hideModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-top">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g1" x1="20" y1="18" x2="108" y2="112" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#DDEBFF"/>
+                <stop offset=".45" stop-color="#9EC0FF"/>
+                <stop offset="1" stop-color="#6F9AF0"/>
+              </linearGradient>
+              <radialGradient id="g2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(64 64) rotate(90) scale(48)">
+                <stop stop-color="#fff" stop-opacity=".95"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>
+            </defs>
+            <g filter="url(#blur)" opacity=".88">
+              <path d="M63.8 64c-12.6-10.7-29.8-15.8-41-12.3C8.4 55.2 7.2 69.4 17.1 79.4c10.5 10.6 29 10.8 43.2-2.2 1.9-1.7 3.7-3.6 5.6-5.7-2-2.2-3.9-4.1-6-7.5Z" fill="url(#g1)"/>
+              <path d="M64.2 64c12.6-10.7 29.8-15.8 41-12.3 14.4 3.5 15.6 17.7 5.7 27.7C100.4 90 81.9 90.2 67.7 77.2c-1.9-1.7-3.7-3.6-5.6-5.7 2-2.2 3.9-4.1 6-7.5Z" fill="url(#g1)"/>
+              <path d="M63.8 62.8c-8.6 9.4-18.7 26.4-15.6 38.5 3.9 15 20 15.9 28 4.2 8.6-12.6 2.4-29.7-12.4-41.3Z" fill="url(#g1)"/>
+              <path d="M64.2 62.8c8.6 9.4 18.7 26.4 15.6 38.5-3.9 15-20 15.9-28 4.2-8.6-12.6-2.4-29.7 12.4-41.3Z" fill="url(#g1)"/>
+              <circle cx="64" cy="64" r="17" fill="url(#g2)"/>
+            </g>
+          </svg>
+          <div>
+            <div class="brand-name">Area</div>
+            <div class="brand-sub">System hub</div>
+          </div>
+        </div>
+        <div class="workspace">
+          <div>
+            <strong>Production</strong><br />
+            <span>Workspace online</span>
+          </div>
+          <span class="pill">Live</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <div class="section-label">Overview</div>
+        <div class="nav-item active" data-page="dashboard"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+        <div class="nav-item" data-page="usage"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18h16"/><path d="M6 14V9"/><path d="M12 18V5"/><path d="M18 12V7"/></svg>Usage</div>
+        <div class="nav-item" data-page="activity"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>Activity Log</div>
+
+        <div class="section-label">Build</div>
+        <div class="nav-item" data-page="apikeys"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 7.5a4 4 0 1 1 5.7 5.7L15 18.4V21h-3v-3h-3v-3.2l5.5-7.3Z"/></svg>API Keys <span class="badge blue">3</span></div>
+        <div class="nav-item" data-page="models"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.8 5.7L21 10l-4.5 4.3L17.6 21 12 18 6.4 21l1.1-6.7L3 10l6.2-.3L12 3Z"/></svg>Models</div>
+        <div class="nav-item" data-page="playground"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="m10 9 5 3-5 3V9Z"/></svg>Playground</div>
+        <div class="nav-item" data-page="webhooks"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 8h8a4 4 0 0 1 0 8H8"/><path d="M16 16H8a4 4 0 0 1 0-8"/></svg>Webhooks</div>
+        <div class="nav-item" data-page="ai"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1" fill="currentColor" stroke="none"/></svg>AI Chat <span class="badge blue">3</span></div>
+
+        <div class="section-label">Support</div>
+        <div class="nav-item" data-page="integrations"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>Integrations <span class="badge green">7</span></div>
+        <div class="nav-item" data-page="knowledge"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19.5A2.5 2.5 0 0 1 7.5 17H20"/><path d="M7.5 4H20v16H7.5A2.5 2.5 0 0 0 5 22.5v-16A2.5 2.5 0 0 1 7.5 4Z"/></svg>Knowledge Base</div>
+        <div class="nav-item" data-page="conversations"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a3 3 0 0 1-3 3H9l-5 4V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v9Z"/></svg>Conversations</div>
+        <div class="nav-item" data-page="analytics"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10"/><path d="M12 20V4"/><path d="M19 20v-7"/></svg>Analytics</div>
+
+        <div class="section-label">Platform</div>
+        <div class="nav-item" data-page="pricing"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg>Pricing</div>
+
+        <div class="section-label">Organization</div>
+        <div class="nav-item" data-page="team"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 11h4"/><path d="M18 9v4"/></svg>Team</div>
+        <div class="nav-item" data-page="billing"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>Billing</div>
+        <div class="nav-item" data-page="settings"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.4-2-3.5-2.3.9a7 7 0 0 0-1.7-1L15 3h-6l-.9 2.1a7 7 0 0 0-1.7 1L4.1 5.1l-2 3.5L4 10a7 7 0 0 0 0 2l-1.9 1.4 2 3.5 2.3-.9a7 7 0 0 0 1.7 1L9 21h6l.9-2.1a7 7 0 0 0 1.7-1l2.3.9 2-3.5L18.9 14a7 7 0 0 0 .1-2Z"/></svg>Settings</div>
+      </nav>
+
+      <div class="side-footer">
+        <div class="profile" role="button" tabindex="0" data-jump="settings">
+          <div class="avatar">A</div>
+          <div style="min-width:0;flex:1">
+            <b>Area Admin</b>
+            <small>Pro workspace</small>
+          </div>
+          <span class="badge">•••</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="menu-btn" onclick="toggleSidebar(true)" aria-label="Open sidebar">☰</button>
+        <div class="crumbs" id="crumbs"><strong>Area</strong><span>•</span><span id="crumbText">Dashboard</span></div>
+        <div class="top-actions">
+          <div class="search"><span style="color:#8f8a80">⌕</span><input id="globalSearch" type="search" placeholder="Search pages, keys, logs, docs…" /></div>
+          <button class="btn soft" onclick="showToast('Refreshed')">Refresh</button>
+          <button class="btn primary" onclick="openQuickAdd()">New</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <section class="page active" id="page-dashboard">
+          <div class="hero">
+            <div class="hero-top">
+              <div>
+                <div class="eyebrow">Area system</div>
+                <h1>Everything in one clean place.</h1>
+                <p>Dashboard, keys, usage, support tools, models, team, billing, logs, and settings are wired to live state. Everything here updates from the workspace data instead of static placeholders.</p>
+                <div class="hero-actions">
+                  <button class="btn primary" onclick="go('playground')">Open playground</button>
+                  <button class="btn soft" onclick="go('knowledge')">Upload knowledge</button>
+                  <button class="btn soft" onclick="go('apikeys')">View API keys</button>
+                </div>
+              </div>
+              <div class="hero-side">
+                <div class="hero-kpi"><small>Workspace status</small><b>Healthy</b></div>
+                <div class="hero-kpi"><small>Active sessions</small><b>3,412</b></div>
+                <div class="hero-kpi"><small>Average response</small><b>1.8s</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid cols-4">
+            <div class="metric"><small>Total conversations</small><strong>8,429</strong><span><span class="delta up">▲ 14%</span> vs previous period</span></div>
+            <div class="metric"><small>Resolved automatically</small><strong>73.4%</strong><span><span class="delta up">▲ 2.1%</span> better than last month</span></div>
+            <div class="metric"><small>Knowledge hits</small><strong>91.2%</strong><span><span class="delta up">▲ 6.4%</span> strong match rate</span></div>
+            <div class="metric"><small>Median reply time</small><strong>3.8s</strong><span><span class="delta up">▲ 0.4s</span> faster than before</span></div>
+          </div>
+
+          <div class="grid cols-3">
+            <div class="card">
+              <div class="card-head"><div><h3>Top intents</h3><p>Most common topics coming in right now.</p></div><button class="btn soft" onclick="go('analytics')">Open</button></div>
+              <div class="card-body list">
+                <div class="row"><div class="left"><b>Account access</b><small>Password reset, sign in, MFA</small></div><div class="right">2,381</div></div>
+                <div class="row"><div class="left"><b>Billing</b><small>Plan, invoice, payment issue</small></div><div class="right">1,144</div></div>
+                <div class="row"><div class="left"><b>Docs & API</b><small>SDK, auth, endpoint help</small></div><div class="right">908</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Recent activity</h3><p>Latest events across the workspace.</p></div><button class="btn soft" onclick="go('activity')">Logs</button></div>
+              <div class="card-body list">
+                <div class="row"><div class="left"><b>Webhook verified</b><small>orders.created endpoint</small></div><div class="right">2m ago</div></div>
+                <div class="row"><div class="left"><b>New key created</b><small>production-default</small></div><div class="right">11m ago</div></div>
+                <div class="row"><div class="left"><b>Knowledge file updated</b><small>Refund policy v3</small></div><div class="right">32m ago</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Quick shortcuts</h3><p>Common actions, no clutter.</p></div></div>
+              <div class="card-body list">
+                <div class="hero-mini" onclick="go('playground')"><div class="mini-dot"></div><div><b>Run live prompt</b><div class="muted">Open the playground and send a message live.</div></div></div>
+                <div class="hero-mini" onclick="openModal('key')"><div class="mini-dot" style="background:#7aa96b;box-shadow:0 0 0 5px rgba(122,169,107,.14)"></div><div><b>Create live API key</b><div class="muted">Generate and copy a key instantly.</div></div></div>
+                <div class="hero-mini" onclick="openModal('webhook')"><div class="mini-dot" style="background:#f0a04a;box-shadow:0 0 0 5px rgba(240,160,74,.16)"></div><div><b>Add webhook URL</b><div class="muted">Register a delivery URL.</div></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-usage">
+          <div class="hero-mini" style="margin-bottom:16px"><div class="mini-dot"></div><div><b>Usage</b><div class="muted">Current month usage updates live with clean limits.</div></div></div>
+          <div class="grid cols-2">
+            <div class="card pad">
+              <h3 style="margin:0 0 14px;letter-spacing:-.03em">Usage vs limits</h3>
+              <div class="list">
+                <div class="row"><div class="left"><b>Conversations</b><small>7,842 / 10,000</small></div><div class="right">78%</div></div>
+                <div class="row"><div class="left"><b>Input tokens</b><small>142.3M / 500M</small></div><div class="right">28%</div></div>
+                <div class="row"><div class="left"><b>Output tokens</b><small>38.1M / 150M</small></div><div class="right">25%</div></div>
+                <div class="row"><div class="left"><b>Storage</b><small>6.8GB / 10GB</small></div><div class="right">68%</div></div>
+              </div>
+            </div>
+            <div class="card pad">
+              <h3 style="margin:0 0 14px;letter-spacing:-.03em">Billing summary</h3>
+              <div class="list">
+                <div class="row"><div class="left"><b>Pro plan</b><small>Monthly subscription</small></div><div class="right">$79.00</div></div>
+                <div class="row"><div class="left"><b>Additional usage</b><small>0 overages</small></div><div class="right">$0.00</div></div>
+                <div class="row"><div class="left"><b>Next billing date</b><small>May 1, 2025</small></div><div class="right">Scheduled</div></div>
+              </div>
+              <div class="form-actions"><button class="btn soft" onclick="go('billing')">Open billing</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-activity">
+          <div class="card">
+            <div class="card-head"><div><h3>Activity log</h3><p>Auth, API, admin and product events.</p></div><button class="btn soft" onclick="showToast('Log export ready')">Export</button></div>
+            <div class="card-body table-wrap">
+              <table>
+                <thead><tr><th>Time</th><th>Type</th><th>Event</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>2m ago</td><td>Webhook</td><td>Endpoint verified</td><td><span class="badge green">Success</span></td></tr>
+                  <tr><td>11m ago</td><td>API</td><td>New key created</td><td><span class="badge blue">Created</span></td></tr>
+                  <tr><td>32m ago</td><td>Knowledge</td><td>Policy file updated</td><td><span class="badge">Done</span></td></tr>
+                  <tr><td>1h ago</td><td>Auth</td><td>New login detected</td><td><span class="badge blue">Verified</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-apikeys">
+          <div class="card">
+            <div class="card-head"><div><h3>API keys</h3><p>Keep keys private. Create, copy, rotate and disable them.</p></div><button class="btn primary" onclick="openModal('key')">Create key</button></div>
+            <div class="card-body list">
+              <div class="row"><div class="left"><b>production-default</b><small>Last used 4 minutes ago</small></div><div class="right"><button class="btn soft" onclick="copyText('area_pk_live_7d9f0e4c8a')">Copy</button></div></div>
+              <div class="row"><div class="left"><b>dashboard-readonly</b><small>Read-only access</small></div><div class="right"><button class="btn soft" onclick="copyText('area_pk_ro_4b12c3319f')">Copy</button></div></div>
+              <div class="row"><div class="left"><b>webhook-signer</b><small>Signs inbound events</small></div><div class="right"><button class="btn soft" onclick="copyText('area_sk_hook_91fe2ba8')">Copy</button></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-models">
+          <div class="grid cols-3">
+            <div class="topic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8L12 3Z"/></svg><h4>Area Opus</h4><p>Best for complex reasoning and detailed support conversations.</p></div>
+            <div class="topic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M12 4v16"/></svg><h4>Area Sonnet</h4><p>Balanced speed and quality for everyday production tasks.</p></div>
+            <div class="topic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h5l2-5 3 10 2-5h4"/></svg><h4>Area Haiku</h4><p>Fastest model for high-volume, lightweight interactions.</p></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-playground">
+          <div class="grid cols-2">
+            <div class="card">
+              <div class="card-head"><div><h3>Playground</h3><p>Prompt runner connected to live workspace state.</p></div></div>
+              <div class="card-body">
+                <label class="label">System prompt</label>
+                <textarea rows="6">You are an Area assistant. Be concise, useful, and structured.</textarea>
+                <div style="height:12px"></div>
+                <label class="label">User message</label>
+                <textarea rows="5" placeholder="Ask something..."></textarea>
+                <div class="form-actions"><button class="btn soft" onclick="showToast('Saved draft')">Save</button><button class="btn primary" onclick="showToast('Running prompt')">Run</button></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Output</h3><p>Formatted response preview.</p></div></div>
+              <div class="card-body">
+                <div class="code"><div class="code-header"><b>response.json</b><button class="copy" onclick="copyBlock(this, 'sampleResponse')">Copy</button></div><pre id="sampleResponse">{
+  "message": "Your request has been processed successfully.",
+  "confidence": 0.98,
+  "resolved": true,
+  "tokens": { "input": 128, "output": 42 }
+}</pre></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-webhooks">
+          <div class="card">
+            <div class="card-head"><div><h3>Webhooks</h3><p>Endpoints, retries, signatures, and delivery history.</p></div><button class="btn primary" onclick="openModal('webhook')">Add endpoint</button></div>
+            <div class="card-body list">
+              <div class="row"><div class="left"><b>orders.created</b><small>https://example.com/webhooks/orders</small></div><div class="right"><span class="badge green">Healthy</span></div></div>
+              <div class="row"><div class="left"><b>billing.failed</b><small>https://example.com/webhooks/billing</small></div><div class="right"><span class="badge blue">Testing</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-integrations">
+          <div class="grid cols-3">
+            <div class="topic"><h4>Slack</h4><p>Route alerts and support events.</p></div>
+            <div class="topic"><h4>Zendesk</h4><p>Sync tickets and reply status.</p></div>
+            <div class="topic"><h4>Intercom</h4><p>Customer chat handoff integration.</p></div>
+            <div class="topic"><h4>GitHub</h4><p>Pull request and release alerts.</p></div>
+            <div class="topic"><h4>Notion</h4><p>Docs and knowledge sync.</p></div>
+            <div class="topic"><h4>Stripe</h4><p>Billing and event routing.</p></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-knowledge">
+          <div class="grid cols-2">
+            <div class="card">
+              <div class="card-head"><div><h3>Knowledge base</h3><p>Search and sync source content.</p></div><button class="btn primary" onclick="showToast('Upload started')">Upload file</button></div>
+              <div class="card-body list" id="kbList">
+                <div class="row kb-item"><div class="left"><b>Refund policy</b><small>Version 3 • PDF imported</small></div><div class="right">Updated 2d ago</div></div>
+                <div class="row kb-item"><div class="left"><b>Shipping FAQ</b><small>Web page source</small></div><div class="right">Updated 5d ago</div></div>
+                <div class="row kb-item"><div class="left"><b>Support playbook</b><small>Markdown notes</small></div><div class="right">Updated 1w ago</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>Import from URL</h3><p>Paste a link and create a source.</p></div></div>
+              <div class="card-body">
+                <label class="label">URL</label>
+                <input class="input" placeholder="https://your-site.com/docs" />
+                <div style="height:12px"></div>
+                <label class="label">Notes</label>
+                <textarea rows="7" placeholder="Optional notes..."></textarea>
+                <div class="form-actions"><button class="btn soft" onclick="showToast('Preview ready')">Preview</button><button class="btn primary" onclick="showToast('Imported')">Import</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-conversations">
+          <div class="card">
+            <div class="card-head"><div><h3>Conversations</h3><p>Compact conversation list with live statuses.</p></div><button class="btn soft" onclick="showToast('Filter applied')">Filter</button></div>
+            <div class="card-body table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>Channel</th><th>Intent</th><th>Status</th><th>Time</th></tr></thead>
+                <tbody>
+                  <tr><td>conv_1847</td><td>API</td><td>Order status</td><td><span class="badge green">Resolved</span></td><td>2m ago</td></tr>
+                  <tr><td>conv_1848</td><td>Web</td><td>Billing help</td><td><span class="badge blue">Open</span></td><td>14m ago</td></tr>
+                  <tr><td>conv_1849</td><td>Chat</td><td>Password reset</td><td><span class="badge">Escalated</span></td><td>1h ago</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-analytics">
+          <div class="grid cols-2">
+            <div class="card pad"><h3 style="margin:0 0 14px">Analytics snapshot</h3><div class="list"><div class="row"><div class="left"><b>Resolution rate</b><small>Trend is up</small></div><div class="right">73.4%</div></div><div class="row"><div class="left"><b>CSAT</b><small>Stable and strong</small></div><div class="right">4.7 / 5</div></div><div class="row"><div class="left"><b>Escalation rate</b><small>Lower than last month</small></div><div class="right">8.2%</div></div></div></div>
+            <div class="card pad"><h3 style="margin:0 0 14px">Export</h3><p class="muted">Download a clean report or connect your analytics pipeline.</p><div class="form-actions" style="justify-content:flex-start"><button class="btn soft" onclick="showToast('CSV ready')">CSV</button><button class="btn soft" onclick="showToast('PDF ready')">PDF</button><button class="btn primary" onclick="showToast('Report shared')">Share</button></div></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-team">
+          <div class="card">
+            <div class="card-head"><div><h3>Team</h3><p>Members, roles, access, and invites.</p></div><button class="btn primary" onclick="showToast('Invite sent')">Invite member</button></div>
+            <div class="card-body list">
+              <div class="row"><div class="left"><b>Area Admin</b><small>Owner • Full access</small></div><div class="right">Online</div></div>
+              <div class="row"><div class="left"><b>Support Lead</b><small>Support • Can edit knowledge</small></div><div class="right">Active</div></div>
+              <div class="row"><div class="left"><b>Developer</b><small>API • Keys and webhooks</small></div><div class="right">Active</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-billing">
+          <div class="grid cols-2">
+            <div class="card pad"><h3 style="margin:0 0 14px">Plan</h3><div class="list"><div class="row"><div class="left"><b>Pro</b><small>Monthly billing</small></div><div class="right">$79.00</div></div><div class="row"><div class="left"><b>Usage overage</b><small>None this month</small></div><div class="right">$0.00</div></div><div class="row"><div class="left"><b>Next invoice</b><small>May 1, 2025</small></div><div class="right">Scheduled</div></div></div></div>
+            <div class="card pad"><h3 style="margin:0 0 14px">Payment method</h3><div class="empty">Card ending in 4242 • update from settings</div></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings">
+          <div class="grid cols-2">
+            <div class="card pad">
+              <h3 style="margin:0 0 14px">General</h3>
+              <div class="form-grid">
+                <div><label class="label">Workspace name</label><input class="input" value="Area" /></div>
+                <div><label class="label">Language</label><select class="select"><option>English</option><option>Hindi</option><option>Spanish</option></select></div>
+                <div><label class="label">Timezone</label><select class="select"><option>Asia/Kolkata</option><option>UTC</option></select></div>
+                <div><label class="label">Theme</label><select class="select"><option>System</option><option>Light</option><option>Soft dark</option></select></div>
+              </div>
+              <div class="form-actions"><button class="btn soft" onclick="showToast('Saved')">Save</button></div>
+            </div>
+            <div class="card pad">
+              <h3 style="margin:0 0 14px">Preferences</h3>
+              <div class="list"><div class="row"><div class="left"><b>Email notifications</b><small>Get system alerts</small></div><div class="right"><input type="checkbox" checked></div></div><div class="row"><div class="left"><b>Compact layout</b><small>Reduce spacing across pages</small></div><div class="right"><input type="checkbox" checked></div></div><div class="row"><div class="left"><b>Developer mode</b><small>Show advanced tools</small></div><div class="right"><input type="checkbox"></div></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── AI CHAT PAGE ── -->
+        <section class="page" id="page-ai">
+          <div class="hero" style="margin-bottom:0">
+            <div class="hero-top">
+              <div>
+                <div class="eyebrow">Area AI Chat</div>
+                <h1 style="font-size:36px">Three AI models, one platform.</h1>
+                <p>ChatGPT, Claude, and DeepSeek — each with their own look, feel, and system behavior. <strong>Tap once</strong> to copy config. <strong>Double tap</strong> to open full chat.</p>
+              </div>
+              <div class="hero-side">
+                <div class="hero-kpi"><small>Live models</small><b>3 active</b></div>
+                <div class="hero-kpi"><small>Response time</small><b>~1.2s avg</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-modes-grid" id="aiModesGrid">
+
+            <!-- ChatGPT Card -->
+            <div class="ai-mode-card theme-gpt" id="card-chatgpt" onclick="handleAICardTap('chatgpt')">
+              <div class="ai-card-inner">
+                <div class="ai-card-logo">
+                  <svg width="28" height="28" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M37.53 16.75a10.23 10.23 0 0 0-.88-8.4 10.35 10.35 0 0 0-11.15-4.97A10.23 10.23 0 0 0 17.8 0 10.35 10.35 0 0 0 7.96 7.1a10.23 10.23 0 0 0-6.83 4.97 10.35 10.35 0 0 0 1.27 12.18 10.23 10.23 0 0 0 .88 8.4 10.35 10.35 0 0 0 11.15 4.97A10.23 10.23 0 0 0 22.2 41a10.35 10.35 0 0 0 9.86-7.18 10.23 10.23 0 0 0 6.83-4.97 10.35 10.35 0 0 0-1.36-12.1ZM22.2 38.5a7.68 7.68 0 0 1-4.93-1.78l.24-.14 8.18-4.72a1.36 1.36 0 0 0 .68-1.18V19.26l3.46 2a.12.12 0 0 1 .07.1v9.55A7.71 7.71 0 0 1 22.2 38.5ZM5.83 31.51a7.68 7.68 0 0 1-.92-5.17l.25.15 8.18 4.72a1.36 1.36 0 0 0 1.36 0L24.85 25v4a.12.12 0 0 1-.05.1l-8.28 4.78a7.71 7.71 0 0 1-10.7-2.37ZM4.31 13.73A7.68 7.68 0 0 1 8.3 9.94v9.67a1.36 1.36 0 0 0 .68 1.18l10.24 5.91-3.46 2a.12.12 0 0 1-.12 0L7.1 23.9a7.71 7.71 0 0 1-2.8-10.17Zm28.4 6.63-10.24-5.9 3.46-2a.12.12 0 0 1 .12 0l8.54 4.93a7.71 7.71 0 0 1-1.2 13.9V21.54a1.36 1.36 0 0 0-.68-1.18Zm3.44-5.19-.25-.14-8.18-4.72a1.36 1.36 0 0 0-1.36 0L15.12 16V12a.12.12 0 0 1 .05-.1l8.27-4.77a7.71 7.71 0 0 1 11.47 7.99l-.76.05ZM13.52 22l-3.46-2a.12.12 0 0 1-.07-.1v-9.55a7.71 7.71 0 0 1 12.65-5.93l-.25.14L14.21 9.3a1.36 1.36 0 0 0-.68 1.18L13.52 22Zm1.88-4.06 4.56-2.63 4.56 2.63v5.25l-4.56 2.63-4.56-2.63V17.94Z" fill="#10a37f"/></svg>
+                </div>
+                <div class="ai-card-name">ChatGPT</div>
+                <div class="ai-card-maker">by OpenAI</div>
+                <div class="ai-card-desc">The world's most-used AI. Direct, clear, and capable. Ideal for writing, Q&A, code, and everyday tasks at scale.</div>
+                <div class="ai-card-model" style="color:#10a37f;border-color:#10a37f55">
+                  <span class="ai-pulse green"></span> GPT-4o
+                </div>
+                <div class="ai-card-stats">
+                  <div class="ai-card-stat"><b>2T+</b><small>Params</small></div>
+                  <div class="ai-card-stat"><b>128K</b><small>Context</small></div>
+                  <div class="ai-card-stat"><b>0.9s</b><small>Avg latency</small></div>
+                </div>
+              </div>
+              <div class="tap-hint">↑ Tap · ↑↑ Double tap to chat</div>
+            </div>
+
+            <!-- Claude Card -->
+            <div class="ai-mode-card theme-claude" id="card-claude" onclick="handleAICardTap('claude')">
+              <div class="ai-card-inner">
+                <div class="ai-card-logo">
+                  <svg width="26" height="26" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M63.8 64c-12.6-10.7-29.8-15.8-41-12.3C8.4 55.2 7.2 69.4 17.1 79.4c10.5 10.6 29 10.8 43.2-2.2 1.9-1.7 3.7-3.6 5.6-5.7-2-2.2-3.9-4.1-6-7.5Z" fill="#d4652a"/>
+                    <path d="M64.2 64c12.6-10.7 29.8-15.8 41-12.3 14.4 3.5 15.6 17.7 5.7 27.7C100.4 90 81.9 90.2 67.7 77.2c-1.9-1.7-3.7-3.6-5.6-5.7 2-2.2 3.9-4.1 6-7.5Z" fill="#d4652a"/>
+                    <path d="M63.8 62.8c-8.6 9.4-18.7 26.4-15.6 38.5 3.9 15 20 15.9 28 4.2 8.6-12.6 2.4-29.7-12.4-41.3Z" fill="#d4652a"/>
+                    <path d="M64.2 62.8c8.6 9.4 18.7 26.4 15.6 38.5-3.9 15-20 15.9-28 4.2-8.6-12.6-2.4-29.7 12.4-41.3Z" fill="#d4652a"/>
+                  </svg>
+                </div>
+                <div class="ai-card-name">Claude</div>
+                <div class="ai-card-maker">by Anthropic</div>
+                <div class="ai-card-desc">Thoughtful, nuanced, and honest. Built for deep reasoning, long documents, and conversations that require real care and accuracy.</div>
+                <div class="ai-card-model" style="color:#d4652a;border-color:#d4652a55">
+                  <span class="ai-pulse orange"></span> Claude Sonnet
+                </div>
+                <div class="ai-card-stats">
+                  <div class="ai-card-stat"><b>200K</b><small>Context</small></div>
+                  <div class="ai-card-stat"><b>High</b><small>Accuracy</small></div>
+                  <div class="ai-card-stat"><b>1.1s</b><small>Avg latency</small></div>
+                </div>
+              </div>
+              <div class="tap-hint" style="color:#d4652a">↑ Tap · ↑↑ Double tap to chat</div>
+            </div>
+
+            <!-- DeepSeek Card -->
+            <div class="ai-mode-card theme-ds" id="card-deepseek" onclick="handleAICardTap('deepseek')">
+              <div class="ai-card-inner">
+                <div class="ai-card-logo">
+                  <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" stroke="#4d9bf5" stroke-width="4"/>
+                    <path d="M30 65 Q50 25 70 65" stroke="#4d9bf5" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <circle cx="50" cy="50" r="8" fill="#4d9bf5" opacity=".7"/>
+                    <path d="M50 50 L50 30" stroke="#4d9bf5" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="ai-card-name">DeepSeek</div>
+                <div class="ai-card-maker">by DeepSeek AI</div>
+                <div class="ai-card-desc">Precision-engineered for code, math, and deep reasoning. State-of-the-art performance with transparent chain-of-thought.</div>
+                <div class="ai-card-model" style="color:#4d9bf5;border-color:#4d9bf555">
+                  <span class="ai-pulse blue"></span> DeepSeek-R1
+                </div>
+                <div class="ai-card-stats">
+                  <div class="ai-card-stat"><b>671B</b><small>Params</small></div>
+                  <div class="ai-card-stat"><b>64K</b><small>Context</small></div>
+                  <div class="ai-card-stat"><b>1.4s</b><small>Avg latency</small></div>
+                </div>
+              </div>
+              <div class="tap-hint">↑ Tap · ↑↑ Double tap to chat</div>
+            </div>
+          </div>
+
+          <!-- URL Import Section -->
+          <div class="url-import-section">
+            <div class="url-import-head">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <div>
+                <h3>URL Context Import</h3>
+                <p>Paste any public URL — the AI will read the page and use it as context in chat.</p>
+              </div>
+            </div>
+            <div class="url-import-body">
+              <div style="display:flex;gap:10px;align-items:center">
+                <input class="input" id="aiUrlInput" placeholder="https://example.com/docs/page" style="flex:1" />
+                <button class="btn primary" onclick="fetchAndPreviewURL()">Fetch Preview</button>
+              </div>
+              <div id="aiUrlResults" class="url-result-cards" style="display:none"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── PRICING PAGE ── -->
+        <section class="page" id="page-pricing">
+          <div class="hero" style="margin-bottom:0">
+            <div class="eyebrow">Area plans</div>
+            <h1 style="font-size:34px;margin:8px 0 10px">Simple, transparent pricing.</h1>
+            <p style="color:var(--muted);font-size:15px;line-height:1.75;max-width:640px;margin:0 0 22px">Choose the plan that fits your scale. Every plan includes the full Area dashboard, API access, and real-time support tooling. No hidden fees.</p>
+          </div>
+
+          <div class="pricing-grid" style="margin-top:22px">
+            <!-- Starter -->
+            <div class="price-card">
+              <span class="price-tag">Starter</span>
+              <div class="plan-name">Basic</div>
+              <div class="price-row">
+                <div class="price-sym">$</div>
+                <div class="price-amt">0</div>
+                <div class="price-per">/ month</div>
+              </div>
+              <div class="price-desc">Perfect for indie projects and early-stage products getting started.</div>
+              <ul class="feat-list">
+                <li><div class="feat-check"><span>✓</span></div><span>Up to 1,000 conversations / mo</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>1 API key</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Area Haiku model</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Basic analytics</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Community support</span></li>
+              </ul>
+              <button class="price-cta outline" onclick="showToast('Starter plan selected')">Get started free</button>
+            </div>
+
+            <!-- Pro (featured) -->
+            <div class="price-card pc-dark">
+              <div class="price-ribbon">Popular</div>
+              <span class="price-tag">Pro</span>
+              <div class="plan-name">Premium</div>
+              <div class="price-row">
+                <div class="price-sym">$</div>
+                <div class="price-amt">29</div>
+                <div class="price-per">/ month</div>
+              </div>
+              <div class="price-desc">The right balance of power and price for growing products.</div>
+              <ul class="feat-list">
+                <li><div class="feat-check"><span>✓</span></div><span>Up to 10,000 conversations / mo</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>5 API keys</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Area Sonnet + Haiku models</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Full analytics + exports</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Webhooks &amp; integrations</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Priority email support</span></li>
+              </ul>
+              <button class="price-cta" onclick="showToast('Pro plan selected')">Choose Premium</button>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="price-card">
+              <span class="price-tag">Scale</span>
+              <div class="plan-name">Enterprise</div>
+              <div class="price-row">
+                <div class="price-sym">$</div>
+                <div class="price-amt">99</div>
+                <div class="price-per">/ month</div>
+              </div>
+              <div class="price-desc">For teams shipping at scale with custom requirements.</div>
+              <ul class="feat-list">
+                <li><div class="feat-check"><span>✓</span></div><span>Unlimited conversations</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Unlimited API keys</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>All models including Opus</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Custom knowledge base limits</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>SSO &amp; team roles</span></li>
+                <li><div class="feat-check"><span>✓</span></div><span>Dedicated support + SLA</span></li>
+              </ul>
+              <button class="price-cta outline" onclick="showToast('Enterprise plan selected')">Choose Enterprise</button>
+            </div>
+          </div>
+
+          <div class="price-note">All plans include a 14-day free trial. No credit card required to start. Cancel anytime from your billing settings.</div>
+
+          <div class="pricing-compare">
+            <h3>Feature comparison</h3>
+            <div class="table-wrap">
+              <table class="compare-table">
+                <thead>
+                  <tr><th>Feature</th><th>Basic</th><th>Premium</th><th>Enterprise</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Conversations / month</td><td>1,000</td><td>10,000</td><td>Unlimited</td></tr>
+                  <tr><td>API keys</td><td>1</td><td>5</td><td>Unlimited</td></tr>
+                  <tr><td>Models available</td><td>Haiku</td><td>Haiku, Sonnet</td><td>All (incl. Opus)</td></tr>
+                  <tr><td>Knowledge base storage</td><td>100 MB</td><td>5 GB</td><td>Unlimited</td></tr>
+                  <tr><td>Webhooks</td><td class="dash">—</td><td class="chk">✓</td><td class="chk">✓</td></tr>
+                  <tr><td>Custom integrations</td><td class="dash">—</td><td class="chk">✓</td><td class="chk">✓</td></tr>
+                  <tr><td>SSO / team roles</td><td class="dash">—</td><td class="dash">—</td><td class="chk">✓</td></tr>
+                  <tr><td>SLA uptime guarantee</td><td class="dash">—</td><td class="dash">—</td><td class="chk">✓</td></tr>
+                  <tr><td>Priority support</td><td class="dash">—</td><td class="chk">✓</td><td class="chk">✓</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+
+<script>
+(function(){
+  const STORAGE_KEY = 'area-hub-live-state-v1';
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  const escapeHTML = (s = '') => String(s)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const uid = (prefix = 'id') => `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+  const pad = n => String(n).padStart(2, '0');
+  const fmtClock = d => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const fmtRelative = ts => {
+    const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  };
+  const downloadText = (filename, text) => {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const defaultState = () => ({
+    meta: { startedAt: Date.now(), lastSavedAt: Date.now() },
+    metrics: {
+      totalConversations: 8429,
+      resolvedPct: 73.4,
+      knowledgeHitPct: 91.2,
+      medianReplySec: 3.8,
+      activeSessions: 3412,
+      avgResponseSec: 1.8,
+      usage: {
+        conversations: 7842,
+        inputTokens: 142.3,
+        outputTokens: 38.1,
+        storageGB: 6.8,
+        limitConversations: 10000,
+        limitInput: 500,
+        limitOutput: 150,
+        limitStorage: 10
+      },
+      csat: 4.7,
+      escalationPct: 8.2
+    },
+    intents: [
+      { name: 'Account access', detail: 'Password reset, sign in, MFA', count: 2381 },
+      { name: 'Billing', detail: 'Plan, invoice, payment issue', count: 1144 },
+      { name: 'Docs & API', detail: 'SDK, auth, endpoint help', count: 908 }
+    ],
+    activity: [
+      { id: uid('act'), ts: Date.now() - 2 * 60 * 1000, type: 'Webhook', event: 'Endpoint verified', status: 'Success' },
+      { id: uid('act'), ts: Date.now() - 11 * 60 * 1000, type: 'API', event: 'New key created', status: 'Created' },
+      { id: uid('act'), ts: Date.now() - 32 * 60 * 1000, type: 'Knowledge', event: 'Policy file updated', status: 'Done' },
+      { id: uid('act'), ts: Date.now() - 60 * 60 * 1000, type: 'Auth', event: 'New login detected', status: 'Verified' }
+    ],
+    apiKeys: [
+      { id: uid('key'), name: 'production-default', permission: 'Full access', key: 'area_pk_live_7d9f0e4c8a', lastUsed: Date.now() - 4 * 60 * 1000, disabled: false },
+      { id: uid('key'), name: 'dashboard-readonly', permission: 'Read only', key: 'area_pk_ro_4b12c3319f', lastUsed: Date.now() - 22 * 60 * 1000, disabled: false },
+      { id: uid('key'), name: 'webhook-signer', permission: 'Webhook only', key: 'area_sk_hook_91fe2ba8', lastUsed: Date.now() - 1 * 60 * 60 * 1000, disabled: false }
+    ],
+    webhooks: [
+      { id: uid('wh'), event: 'orders.created', url: 'https://example.com/webhooks/orders', status: 'Healthy', secret: 'whsec_4e8a9b', retries: 0, lastDelivery: Date.now() - 2 * 60 * 1000 },
+      { id: uid('wh'), event: 'billing.failed', url: 'https://example.com/webhooks/billing', status: 'Testing', secret: 'whsec_82c1ef', retries: 2, lastDelivery: Date.now() - 14 * 60 * 1000 }
+    ],
+    knowledge: [
+      { id: uid('kb'), title: 'Refund policy', source: 'PDF imported', updatedAt: Date.now() - 2 * 24 * 60 * 60 * 1000, notes: 'Version 3' },
+      { id: uid('kb'), title: 'Shipping FAQ', source: 'Web page source', updatedAt: Date.now() - 5 * 24 * 60 * 60 * 1000, notes: 'Help center' },
+      { id: uid('kb'), title: 'Support playbook', source: 'Markdown notes', updatedAt: Date.now() - 7 * 24 * 60 * 60 * 1000, notes: 'Internal guide' }
+    ],
+    conversations: [
+      { id: 'conv_1847', channel: 'API', intent: 'Order status', status: 'Resolved', ts: Date.now() - 2 * 60 * 1000 },
+      { id: 'conv_1848', channel: 'Web', intent: 'Billing help', status: 'Open', ts: Date.now() - 14 * 60 * 1000 },
+      { id: 'conv_1849', channel: 'Chat', intent: 'Password reset', status: 'Escalated', ts: Date.now() - 60 * 60 * 1000 },
+      { id: 'conv_1850', channel: 'API', intent: 'Invoice download', status: 'Resolved', ts: Date.now() - 3 * 60 * 60 * 1000 },
+      { id: 'conv_1851', channel: 'Web', intent: 'Plan upgrade', status: 'Open', ts: Date.now() - 5 * 60 * 60 * 1000 }
+    ],
+    team: [
+      { id: uid('team'), name: 'Area Admin', role: 'Owner', scope: 'Full access', status: 'Online' },
+      { id: uid('team'), name: 'Support Lead', role: 'Support', scope: 'Can edit knowledge', status: 'Active' },
+      { id: uid('team'), name: 'Developer', role: 'API', scope: 'Keys and webhooks', status: 'Active' }
+    ],
+    billing: {
+      plan: 'Pro',
+      price: 79,
+      nextInvoice: Date.now() + 11 * 24 * 60 * 60 * 1000,
+      card: '4242'
+    },
+    settings: {
+      workspaceName: 'Area',
+      language: 'English',
+      timezone: 'Asia/Kolkata',
+      theme: 'System',
+      emailNotifications: true,
+      compactLayout: true,
+      developerMode: false
+    }
+  });
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      return {
+        ...defaultState(),
+        ...parsed,
+        meta: { ...defaultState().meta, ...(parsed.meta || {}) },
+        metrics: { ...defaultState().metrics, ...(parsed.metrics || {}), usage: { ...defaultState().metrics.usage, ...((parsed.metrics || {}).usage || {}) } },
+        settings: { ...defaultState().settings, ...(parsed.settings || {}) }
+      };
+    } catch (e) {
+      return defaultState();
+    }
+  }
+
+  let state = loadState();
+
+  const pages = [...document.querySelectorAll('.page')];
+  const navItems = [...document.querySelectorAll('.nav-item[data-page]')];
+  const crumbText = $('#crumbText');
+  const sidebar = $('#sidebar');
+  const drawerBackdrop = $('#drawerBackdrop');
+  const toast = $('#toast');
+  const modalBackdrop = $('#modalBackdrop');
+  const modalTitle = $('#modalTitle');
+  const modalBody = $('#modalBody');
+  const globalSearch = $('#globalSearch');
+  const topbar = document.querySelector('.topbar');
+  const topActions = document.querySelector('.top-actions');
+
+  const pageLabels = {
+    dashboard: 'Dashboard', usage: 'Usage', activity: 'Activity Log', apikeys: 'API Keys', models: 'Models', playground: 'Playground', webhooks: 'Webhooks', ai: 'AI Chat', pricing: 'Pricing', integrations: 'Integrations', knowledge: 'Knowledge Base', conversations: 'Conversations', analytics: 'Analytics', team: 'Team', billing: 'Billing', settings: 'Settings'
+  };
+
+  function saveState() {
+    state.meta.lastSavedAt = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 1600);
+  }
+
+  function toggleSidebar(open) {
+    const isOpen = typeof open === 'boolean' ? open : !sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', isOpen);
+    drawerBackdrop.classList.toggle('open', isOpen);
+  }
+
+  function setActive(page) {
+    pages.forEach(p => p.classList.toggle('active', p.id === `page-${page}`));
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.page === page));
+    crumbText.textContent = pageLabels[page] || 'Area';
+    try { history.replaceState(null, '', `#${page}`); } catch(e) { /* srcdoc/iframe context — ignore */ }
+    renderPage(page);
+    document.querySelector('.content').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function go(page) {
+    setActive(page);
+    toggleSidebar(false);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Copied'))
+      .catch(() => showToast('Copy failed'));
+  }
+
+  function copyBlock(btn, id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        btn.classList.add('done');
+        btn.textContent = 'Copied';
+        setTimeout(() => {
+          btn.classList.remove('done');
+          btn.textContent = 'Copy';
+        }, 1200);
+      })
+      .catch(() => showToast('Copy failed'));
+  }
+
+  function addActivity(type, event, status = 'Done') {
+    state.activity.unshift({ id: uid('act'), ts: Date.now(), type, event, status });
+    state.activity = state.activity.slice(0, 50);
+    saveState();
+  }
+
+  function renderDashboard() {
+    const metricEls = $$('#page-dashboard .metric strong');
+    if (metricEls[0]) metricEls[0].textContent = state.metrics.totalConversations.toLocaleString();
+    if (metricEls[1]) metricEls[1].textContent = `${state.metrics.resolvedPct.toFixed(1)}%`;
+    if (metricEls[2]) metricEls[2].textContent = `${state.metrics.knowledgeHitPct.toFixed(1)}%`;
+    if (metricEls[3]) metricEls[3].textContent = `${state.metrics.medianReplySec.toFixed(1)}s`;
+
+    const deltas = $$('#page-dashboard .delta.up');
+    if (deltas[0]) deltas[0].textContent = `▲ ${Math.max(1, Math.round(state.metrics.resolvedPct - 60))}%`;
+    if (deltas[1]) deltas[1].textContent = `▲ ${Math.max(1, Math.round(state.metrics.resolvedPct - 70))}%`;
+    if (deltas[2]) deltas[2].textContent = `▲ ${Math.max(1, Math.round(state.metrics.knowledgeHitPct - 80))}%`;
+    if (deltas[3]) deltas[3].textContent = `▲ ${(Math.max(0.1, state.metrics.medianReplySec / 10)).toFixed(1)}s`;
+
+    const heroKpis = $$('#page-dashboard .hero-kpi b');
+    if (heroKpis[0]) heroKpis[0].textContent = 'Healthy';
+    if (heroKpis[1]) heroKpis[1].textContent = state.metrics.activeSessions.toLocaleString();
+    if (heroKpis[2]) heroKpis[2].textContent = `${state.metrics.avgResponseSec.toFixed(1)}s`;
+
+    const intentsCard = $('#page-dashboard .card-body.list');
+    if (intentsCard) {
+      intentsCard.innerHTML = state.intents.map(intent => `
+        <div class="row">
+          <div class="left">
+            <b>${escapeHTML(intent.name)}</b>
+            <small>${escapeHTML(intent.detail)}</small>
+          </div>
+          <div class="right">${intent.count.toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    const recentCard = $('#page-dashboard .card:nth-of-type(2) .card-body.list');
+    if (recentCard) {
+      recentCard.innerHTML = state.activity.slice(0, 3).map(item => `
+        <div class="row">
+          <div class="left">
+            <b>${escapeHTML(item.event)}</b>
+            <small>${escapeHTML(item.type)} • ${fmtRelative(item.ts)}</small>
+          </div>
+          <div class="right">${escapeHTML(item.status)}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function renderUsage() {
+    const rows = $$('#page-usage .row');
+    const u = state.metrics.usage;
+    if (rows[0]) {
+      rows[0].querySelector('small').textContent = `${u.conversations.toLocaleString()} / ${u.limitConversations.toLocaleString()}`;
+      rows[0].querySelector('.right').textContent = `${Math.round((u.conversations / u.limitConversations) * 100)}%`;
+    }
+    if (rows[1]) {
+      rows[1].querySelector('small').textContent = `${u.inputTokens.toFixed(1)}M / ${u.limitInput}M`;
+      rows[1].querySelector('.right').textContent = `${Math.round((u.inputTokens / u.limitInput) * 100)}%`;
+    }
+    if (rows[2]) {
+      rows[2].querySelector('small').textContent = `${u.outputTokens.toFixed(1)}M / ${u.limitOutput}M`;
+      rows[2].querySelector('.right').textContent = `${Math.round((u.outputTokens / u.limitOutput) * 100)}%`;
+    }
+    if (rows[3]) {
+      rows[3].querySelector('small').textContent = `${u.storageGB.toFixed(1)}GB / ${u.limitStorage}GB`;
+      rows[3].querySelector('.right').textContent = `${Math.round((u.storageGB / u.limitStorage) * 100)}%`;
+    }
+
+    const billingRows = $('#page-usage .card:nth-of-type(2) .card-body.list');
+    if (billingRows) {
+      billingRows.innerHTML = `
+        <div class="row"><div class="left"><b>${escapeHTML(state.billing.plan)} plan</b><small>Monthly subscription</small></div><div class="right">$${state.billing.price.toFixed(2)}</div></div>
+        <div class="row"><div class="left"><b>Additional usage</b><small>0 overages</small></div><div class="right">$0.00</div></div>
+        <div class="row"><div class="left"><b>Next billing date</b><small>${new Date(state.billing.nextInvoice).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</small></div><div class="right">Scheduled</div></div>
+      `;
+    }
+  }
+
+  function renderActivity() {
+    const tbody = $('#page-activity tbody');
+    if (!tbody) return;
+    tbody.innerHTML = state.activity.map(item => `
+      <tr>
+        <td>${fmtRelative(item.ts)}</td>
+        <td>${escapeHTML(item.type)}</td>
+        <td>${escapeHTML(item.event)}</td>
+        <td><span class="badge ${item.status === 'Success' || item.status === 'Verified' || item.status === 'Resolved' ? 'green' : item.status === 'Created' || item.status === 'Open' ? 'blue' : ''}">${escapeHTML(item.status)}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  function renderApiKeys() {
+    const list = $('#page-apikeys .card-body.list');
+    if (!list) return;
+    list.innerHTML = state.apiKeys.map((key) => `
+      <div class="row">
+        <div class="left">
+          <b>${escapeHTML(key.name)}</b>
+          <small>${escapeHTML(key.permission)} • Last used ${fmtRelative(key.lastUsed)}</small>
+        </div>
+        <div class="right" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+          <button class="btn soft" onclick="copyText('${escapeHTML(key.key)}')">Copy</button>
+          <button class="btn soft" onclick="rotateApiKey('${escapeHTML(key.id)}')">Rotate</button>
+          <button class="btn soft" onclick="deleteApiKey('${escapeHTML(key.id)}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderModels() {
+    $$('#page-models .topic').forEach((card, idx) => {
+      card.style.outline = idx === 1 ? '2px solid rgba(95,143,230,.22)' : 'none';
+      card.onclick = () => {
+        state.settings.model = idx === 0 ? 'Opus' : idx === 1 ? 'Sonnet' : 'Haiku';
+        saveState();
+        showToast(`${state.settings.model} selected`);
+      };
+    });
+  }
+
+  function renderPlayground() {
+    const systemPrompt = $('#page-playground textarea');
+    const userMessage = $$('#page-playground textarea')[1];
+    const saveBtn = $('#page-playground .form-actions .btn.soft');
+    const runBtn = $('#page-playground .form-actions .btn.primary');
+    const output = $('#sampleResponse');
+
+    if (systemPrompt) systemPrompt.value = state.settings.systemPrompt || systemPrompt.value;
+
+    if (saveBtn && !saveBtn.dataset.bound) {
+      saveBtn.dataset.bound = '1';
+      saveBtn.addEventListener('click', () => {
+        state.settings.systemPrompt = systemPrompt.value;
+        saveState();
+        showToast('Saved draft');
+      });
+    }
+
+    if (runBtn && !runBtn.dataset.bound) {
+      runBtn.dataset.bound = '1';
+      runBtn.addEventListener('click', () => {
+        const prompt = (userMessage?.value || '').trim();
+        const words = prompt ? prompt.split(/\s+/).length : 0;
+        const response = {
+          message: prompt ? `Processed ${words} words with the current workspace rules.` : 'Add a user message to generate a response preview.',
+          confidence: prompt ? Number(clamp(0.72 + Math.min(0.24, words / 120), 0.72, 0.98).toFixed(2)) : 0.0,
+          resolved: Boolean(prompt),
+          tokens: { input: Math.max(24, prompt.length), output: Math.max(16, Math.round(prompt.length / 3)) },
+          generatedAt: new Date().toISOString()
+        };
+        if (output) output.textContent = JSON.stringify(response, null, 2);
+        addActivity('Playground', prompt ? 'Prompt tested' : 'Empty prompt run', 'Done');
+        renderActivity();
+        showToast('Running prompt');
+      });
+    }
+  }
+
+  function renderWebhooks() {
+    const list = $('#page-webhooks .card-body.list');
+    if (!list) return;
+    list.innerHTML = state.webhooks.map(wh => `
+      <div class="row">
+        <div class="left">
+          <b>${escapeHTML(wh.event)}</b>
+          <small>${escapeHTML(wh.url)} • Delivered ${fmtRelative(wh.lastDelivery)} • Retries ${wh.retries}</small>
+        </div>
+        <div class="right" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+          <span class="badge ${wh.status === 'Healthy' ? 'green' : 'blue'}">${escapeHTML(wh.status)}</span>
+          <button class="btn soft" onclick="testWebhook('${escapeHTML(wh.id)}')">Test</button>
+          <button class="btn soft" onclick="deleteWebhook('${escapeHTML(wh.id)}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderIntegrations() {
+    $$('#page-integrations .topic').forEach(card => {
+      const name = $('h4', card)?.textContent || 'Integration';
+      const connected = state.settings.connectedIntegrations?.includes(name);
+      card.style.borderColor = connected ? 'rgba(47,143,87,.35)' : 'rgba(221,216,204,.8)';
+      let badge = card.querySelector('.badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.style.float = 'right';
+        card.appendChild(badge);
+      }
+      badge.className = `badge ${connected ? 'green' : 'blue'}`;
+      badge.textContent = connected ? 'Connected' : 'Connect';
+      card.onclick = () => {
+        const list = state.settings.connectedIntegrations || [];
+        const i = list.indexOf(name);
+        if (i >= 0) list.splice(i, 1);
+        else list.push(name);
+        state.settings.connectedIntegrations = list;
+        saveState();
+        renderIntegrations();
+        showToast(i >= 0 ? `${name} disconnected` : `${name} connected`);
+      };
+    });
+  }
+
+  function renderKnowledge() {
+    const list = $('#kbList');
+    if (list) {
+      list.innerHTML = state.knowledge.map(item => `
+        <div class="row kb-item">
+          <div class="left">
+            <b>${escapeHTML(item.title)}</b>
+            <small>${escapeHTML(item.notes)} • ${escapeHTML(item.source)}</small>
+          </div>
+          <div class="right">Updated ${fmtRelative(item.updatedAt)}</div>
+        </div>
+      `).join('');
+    }
+
+    const importBtn = $('#page-knowledge .card:nth-of-type(2) .form-actions .btn.primary');
+    const previewBtn = $('#page-knowledge .card:nth-of-type(2) .form-actions .btn.soft');
+    if (previewBtn && !previewBtn.dataset.bound) {
+      previewBtn.dataset.bound = '1';
+      previewBtn.addEventListener('click', () => {
+        showToast('Preview ready');
+      });
+    }
+    if (importBtn && !importBtn.dataset.bound) {
+      importBtn.dataset.bound = '1';
+      importBtn.addEventListener('click', addKnowledgeSource);
+    }
+  }
+
+  function renderConversations() {
+    const tbody = $('#page-conversations tbody');
+    if (!tbody) return;
+    tbody.innerHTML = state.conversations.map(conv => `
+      <tr>
+        <td>${escapeHTML(conv.id)}</td>
+        <td>${escapeHTML(conv.channel)}</td>
+        <td>${escapeHTML(conv.intent)}</td>
+        <td><span class="badge ${conv.status === 'Resolved' ? 'green' : conv.status === 'Open' ? 'blue' : ''}">${escapeHTML(conv.status)}</span></td>
+        <td>${fmtRelative(conv.ts)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderAnalytics() {
+    const rows = $$('#page-analytics .row');
+    if (rows[0]) rows[0].querySelector('.right').textContent = `${state.metrics.resolvedPct.toFixed(1)}%`;
+    if (rows[1]) rows[1].querySelector('.right').textContent = `${state.metrics.csat.toFixed(1)} / 5`;
+    if (rows[2]) rows[2].querySelector('.right').textContent = `${state.metrics.escalationPct.toFixed(1)}%`;
+
+    const btns = $$('#page-analytics .btn');
+    if (btns[0] && !btns[0].dataset.bound) {
+      btns[0].dataset.bound = '1';
+      btns[0].addEventListener('click', () => {
+        downloadText('area-report.csv', [
+          'metric,value',
+          `conversations,${state.metrics.totalConversations}`,
+          `resolved_pct,${state.metrics.resolvedPct.toFixed(1)}`,
+          `csat,${state.metrics.csat.toFixed(1)}`,
+          `escalation_pct,${state.metrics.escalationPct.toFixed(1)}`
+        ].join('\n'));
+        showToast('CSV ready');
+      });
+    }
+    if (btns[1] && !btns[1].dataset.bound) {
+      btns[1].dataset.bound = '1';
+      btns[1].addEventListener('click', () => showToast('PDF ready'));
+    }
+    if (btns[2] && !btns[2].dataset.bound) {
+      btns[2].dataset.bound = '1';
+      btns[2].addEventListener('click', () => {
+        downloadText('area-report.json', JSON.stringify({ metrics: state.metrics, activities: state.activity }, null, 2));
+        showToast('Report shared');
+      });
+    }
+  }
+
+  function renderTeam() {
+    const list = $('#page-team .card-body.list');
+    if (!list) return;
+    list.innerHTML = state.team.map(member => `
+      <div class="row">
+        <div class="left">
+          <b>${escapeHTML(member.name)}</b>
+          <small>${escapeHTML(member.role)} • ${escapeHTML(member.scope)}</small>
+        </div>
+        <div class="right">${escapeHTML(member.status)}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderBilling() {
+    const plan = $('#page-billing .card.pad .row:first-child .left b');
+    const planPrice = $('#page-billing .card.pad .row:first-child .right');
+    const next = $('#page-billing .card.pad .row:last-child .right');
+    const payment = $('#page-billing .empty');
+    if (plan) plan.textContent = state.billing.plan;
+    if (planPrice) planPrice.textContent = `$${state.billing.price.toFixed(2)}`;
+    if (next) next.textContent = new Date(state.billing.nextInvoice).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    if (payment) payment.textContent = `Card ending in ${state.billing.card} • update from settings`;
+  }
+
+  function renderSettings() {
+    const inputs = $$('#page-settings .input, #page-settings .select');
+    const [workspaceName, language, timezone, theme] = inputs;
+    if (workspaceName) workspaceName.value = state.settings.workspaceName;
+    if (language) language.value = state.settings.language;
+    if (timezone) timezone.value = state.settings.timezone;
+    if (theme) theme.value = state.settings.theme;
+
+    const checks = $$('#page-settings input[type="checkbox"]');
+    if (checks[0]) checks[0].checked = !!state.settings.emailNotifications;
+    if (checks[1]) checks[1].checked = !!state.settings.compactLayout;
+    if (checks[2]) checks[2].checked = !!state.settings.developerMode;
+
+    const saveBtn = $('#page-settings .form-actions .btn.soft');
+    if (saveBtn && !saveBtn.dataset.bound) {
+      saveBtn.dataset.bound = '1';
+      saveBtn.addEventListener('click', () => {
+        const [nameEl, langEl, tzEl, themeEl] = $$('#page-settings .input, #page-settings .select');
+        const [emailEl, compactEl, devEl] = $$('#page-settings input[type="checkbox"]');
+        state.settings.workspaceName = nameEl.value.trim() || 'Area';
+        state.settings.language = langEl.value;
+        state.settings.timezone = tzEl.value;
+        state.settings.theme = themeEl.value;
+        state.settings.emailNotifications = !!emailEl.checked;
+        state.settings.compactLayout = !!compactEl.checked;
+        state.settings.developerMode = !!devEl.checked;
+        saveState();
+        document.querySelector('.brand-name').textContent = state.settings.workspaceName;
+        showToast('Saved');
+      });
+    }
+  }
+
+  function renderLiveBar() {
+    if (!$('.live-badge')) {
+      const live = document.createElement('div');
+      live.className = 'live-badge';
+      live.style.marginLeft = 'auto';
+      live.innerHTML = `<div class="mini-dot" style="width:8px;height:8px;box-shadow:0 0 0 3px rgba(95,143,230,.14)"></div><div><div class="live-label">Live</div><div class="live-clock" id="liveClock"></div></div>`;
+      topActions.parentNode.insertBefore(live, topActions);
+    }
+    const liveClock = $('#liveClock');
+    if (liveClock) liveClock.textContent = `${fmtClock(new Date())} • ${navigator.onLine ? 'Online' : 'Offline'}`;
+  }
+
+  function updateLiveStats() {
+    const onlineBoost = navigator.onLine ? 1 : 0;
+    const sessionDrift = Math.sin(Date.now() / 120000) * 18;
+    state.metrics.activeSessions = clamp(Math.round(3412 + sessionDrift + onlineBoost * 12 + state.conversations.filter(c => c.status === 'Open').length * 8), 1000, 99999);
+    state.metrics.avgResponseSec = clamp(Number((1.4 + (state.activity.length % 7) * 0.11).toFixed(1)), 0.8, 3.8);
+    state.metrics.totalConversations = clamp(8400 + state.conversations.length * 9 + state.activity.length, 1, 999999);
+    state.metrics.usage.conversations = clamp(7600 + state.conversations.length * 43, 0, state.metrics.usage.limitConversations);
+    state.metrics.resolvedPct = clamp(Number((70 + (state.conversations.filter(c => c.status === 'Resolved').length / state.conversations.length) * 10).toFixed(1)), 50, 99.9);
+    state.metrics.knowledgeHitPct = clamp(Number((88 + state.knowledge.length * 0.8).toFixed(1)), 80, 99.9);
+    state.metrics.medianReplySec = clamp(Number((3.1 + (state.conversations.filter(c => c.status === 'Open').length * 0.2)).toFixed(1)), 1, 12);
+    state.metrics.csat = clamp(Number((4.4 + Math.min(0.4, state.activity.length / 100)).toFixed(1)), 1, 5);
+    state.metrics.escalationPct = clamp(Number((5.4 + state.conversations.filter(c => c.status === 'Escalated').length * 1.4).toFixed(1)), 0, 100);
+  }
+
+  function addSyntheticLiveActivity() {
+    const pool = [
+      ['API', 'Request spike normalized', 'Success'],
+      ['Webhook', 'Delivery confirmed', 'Success'],
+      ['Knowledge', 'Fresh source indexed', 'Done'],
+      ['Auth', 'Session revalidated', 'Verified'],
+      ['Analytics', 'Usage snapshot refreshed', 'Done']
+    ];
+    if (Math.random() < 0.45) {
+      const [type, event, status] = pool[Math.floor(Math.random() * pool.length)];
+      state.activity.unshift({ id: uid('act'), ts: Date.now(), type, event, status });
+      state.activity = state.activity.slice(0, 50);
+      saveState();
+    }
+  }
+
+  function renderPage() {
+    const page = (location.hash || '#dashboard').replace('#', '');
+    renderLiveBar();
+    updateLiveStats();
+    if (page === 'dashboard') renderDashboard();
+    if (page === 'usage') renderUsage();
+    if (page === 'activity') renderActivity();
+    if (page === 'apikeys') renderApiKeys();
+    if (page === 'models') renderModels();
+    if (page === 'playground') renderPlayground();
+    if (page === 'webhooks') renderWebhooks();
+    if (page === 'integrations') renderIntegrations();
+    if (page === 'knowledge') renderKnowledge();
+    if (page === 'conversations') renderConversations();
+    if (page === 'analytics') renderAnalytics();
+    if (page === 'team') renderTeam();
+    if (page === 'billing') renderBilling();
+    if (page === 'settings') renderSettings();
+    if (page === 'pricing') { /* static page still stays live via top bar */ }
+    saveState();
+  }
+
+  function renderAll() {
+    document.querySelector('.brand-name').textContent = state.settings.workspaceName || 'Area';
+    renderLiveBar();
+    updateLiveStats();
+    renderDashboard();
+    renderUsage();
+    renderActivity();
+    renderApiKeys();
+    renderModels();
+    renderPlayground();
+    renderWebhooks();
+    renderIntegrations();
+    renderKnowledge();
+    renderConversations();
+    renderAnalytics();
+    renderTeam();
+    renderBilling();
+    renderSettings();
+    saveState();
+  }
+
+  function addKnowledgeSource() {
+    const root = $('#page-knowledge .card:nth-of-type(2) .card-body');
+    const urlInput = root?.querySelector('.input');
+    const notesInput = root?.querySelector('textarea');
+    const url = urlInput?.value.trim();
+    const notes = notesInput?.value.trim();
+    if (!url) {
+      showToast('Add a URL first');
+      return;
+    }
+    let title = url;
+    try {
+      title = new URL(url, window.location.href).hostname.replace(/^www\./, '');
+    } catch (_) {}
+    state.knowledge.unshift({
+      id: uid('kb'),
+      title,
+      source: 'Imported URL',
+      updatedAt: Date.now(),
+      notes: notes || 'Imported source'
+    });
+    addActivity('Knowledge', 'Source imported', 'Done');
+    saveState();
+    renderKnowledge();
+    renderDashboard();
+    renderActivity();
+    showToast('Imported');
+    if (urlInput) urlInput.value = '';
+    if (notesInput) notesInput.value = '';
+  }
+
+  function openModal(kind) {
+    modalBackdrop.classList.add('open');
+    if (kind === 'key') {
+      modalTitle.textContent = 'Create API key';
+      modalBody.innerHTML = `
+        <div class="form-grid">
+          <div><label class="label">Key name</label><input id="keyName" class="input" value="production-default" /></div>
+          <div><label class="label">Permission</label><select id="keyPerm" class="select"><option>Full access</option><option>Read only</option><option>Webhook only</option></select></div>
+        </div>
+        <div style="height:12px"></div>
+        <label class="label">Notes</label><textarea id="keyNotes" rows="4" placeholder="Optional notes..."></textarea>
+        <div class="form-actions"><button class="btn soft" onclick="hideModal()">Cancel</button><button class="btn primary" onclick="createApiKey()">Create</button></div>`;
+    } else {
+      modalTitle.textContent = 'Add webhook';
+      modalBody.innerHTML = `
+        <div class="form-grid">
+          <div><label class="label">Event</label><select id="whEvent" class="select"><option>orders.created</option><option>billing.failed</option><option>conversation.closed</option></select></div>
+          <div><label class="label">Secret</label><input id="whSecret" class="input" value="whsec_********" /></div>
+        </div>
+        <div style="height:12px"></div>
+        <label class="label">Endpoint URL</label><input id="whUrl" class="input" placeholder="https://example.com/webhooks" />
+        <div class="form-actions"><button class="btn soft" onclick="hideModal()">Cancel</button><button class="btn primary" onclick="createWebhook()">Save</button></div>`;
+    }
+  }
+
+  function hideModal() { modalBackdrop.classList.remove('open'); }
+  function closeModal(e) { if (e.target === modalBackdrop) hideModal(); }
+  function openQuickAdd() { openModal('key'); }
+
+  function createApiKey() {
+    const name = ($('#keyName')?.value || 'new-key').trim();
+    const permission = $('#keyPerm')?.value || 'Full access';
+    const notes = $('#keyNotes')?.value?.trim() || '';
+    const keyValue = `area_pk_${Math.random().toString(36).slice(2, 10)}`;
+    state.apiKeys.unshift({ id: uid('key'), name, permission, key: keyValue, lastUsed: Date.now(), disabled: false, notes });
+    addActivity('API', 'New key created', 'Created');
+    saveState();
+    renderApiKeys();
+    renderDashboard();
+    renderActivity();
+    showToast('API key created');
+    hideModal();
+  }
+
+  function createWebhook() {
+    const event = ($('#whEvent')?.value || 'orders.created');
+    const secret = ($('#whSecret')?.value || 'whsec_********');
+    const url = ($('#whUrl')?.value || '').trim();
+    if (!url) {
+      showToast('Add endpoint URL');
+      return;
+    }
+    state.webhooks.unshift({ id: uid('wh'), event, url, status: 'Healthy', secret, retries: 0, lastDelivery: Date.now() });
+    addActivity('Webhook', 'Endpoint added', 'Success');
+    saveState();
+    renderWebhooks();
+    renderDashboard();
+    renderActivity();
+    showToast('Webhook added');
+    hideModal();
+  }
+
+  function rotateApiKey(id) {
+    const key = state.apiKeys.find(k => k.id === id);
+    if (!key) return;
+    key.key = `area_pk_${Math.random().toString(36).slice(2, 10)}`;
+    key.lastUsed = Date.now();
+    addActivity('API', `Rotated key: ${key.name}`, 'Created');
+    saveState();
+    renderApiKeys();
+    renderActivity();
+    showToast('Key rotated');
+  }
+
+  function deleteApiKey(id) {
+    state.apiKeys = state.apiKeys.filter(k => k.id !== id);
+    addActivity('API', 'Key deleted', 'Done');
+    saveState();
+    renderApiKeys();
+    renderActivity();
+    showToast('Key deleted');
+  }
+
+  function testWebhook(id) {
+    const wh = state.webhooks.find(w => w.id === id);
+    if (!wh) return;
+    wh.lastDelivery = Date.now();
+    wh.retries = Math.max(0, wh.retries - 1);
+    addActivity('Webhook', `Tested ${wh.event}`, 'Success');
+    saveState();
+    renderWebhooks();
+    renderActivity();
+    showToast('Webhook tested');
+  }
+
+  function deleteWebhook(id) {
+    state.webhooks = state.webhooks.filter(w => w.id !== id);
+    addActivity('Webhook', 'Endpoint deleted', 'Done');
+    saveState();
+    renderWebhooks();
+    renderActivity();
+    showToast('Webhook deleted');
+  }
+
+  function refreshClock() { renderLiveBar(); }
+
+  function handleSearchInput() {
+    const q = globalSearch.value.trim().toLowerCase();
+    if (!q) return;
+    const match = Object.entries(pageLabels).find(([k, label]) => label.toLowerCase().includes(q) || k.includes(q));
+    if (match) setActive(match[0]);
+  }
+
+  navItems.forEach(item => item.addEventListener('click', () => go(item.dataset.page)));
+  document.querySelectorAll('[data-jump]').forEach(el => el.addEventListener('click', () => go(el.dataset.jump)));
+  globalSearch.addEventListener('input', handleSearchInput);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideModal(); });
+  window.addEventListener('online', () => { showToast('Back online'); refreshClock(); });
+  window.addEventListener('offline', () => { showToast('Offline'); refreshClock(); });
+
+  window.go = go;
+  window.toggleSidebar = toggleSidebar;
+  window.showToast = showToast;
+  window.copyText = copyText;
+  window.copyBlock = copyBlock;
+  window.openModal = openModal;
+  window.hideModal = hideModal;
+  window.closeModal = closeModal;
+  window.openQuickAdd = openQuickAdd;
+  window.createApiKey = createApiKey;
+  window.createWebhook = createWebhook;
+  window.rotateApiKey = rotateApiKey;
+  window.deleteApiKey = deleteApiKey;
+  window.testWebhook = testWebhook;
+  window.deleteWebhook = deleteWebhook;
+  window.addKnowledgeSource = addKnowledgeSource;
+
+  renderAll();
+  const hash = (() => { try { return (location.hash || '#dashboard').replace('#', ''); } catch(e) { return 'dashboard'; } })();
+  setActive(pageLabels[hash] ? hash : 'dashboard');
+  refreshClock();
+  setInterval(refreshClock, 1000);
+  setInterval(() => {
+    addSyntheticLiveActivity();
+    updateLiveStats();
+    renderDashboard();
+    renderUsage();
+    renderAnalytics();
+    renderActivity();
+    saveState();
+  }, 15000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     AI CHAT OVERLAY
+═══════════════════════════════════════════ -->
+<div class="ai-overlay" id="aiOverlay">
+  <!-- Top bar -->
+  <div class="ov-topbar">
+    <div class="ov-ai-info">
+      <div class="ov-ai-logo" id="ovLogo">G</div>
+      <div>
+        <div class="ov-ai-name" id="ovName">ChatGPT</div>
+        <div class="ov-ai-model" id="ovModel">GPT-4o · OpenAI</div>
+      </div>
+    </div>
+    <button class="ov-new-chat-btn" id="ovNewChat" onclick="clearAIChat()">New chat</button>
+    <button class="ov-url-btn" id="ovUrlBtn" title="Import URL context" onclick="toggleOvUrlBar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </button>
+    <button class="ov-close-btn" onclick="closeAIChat()" title="Close">✕</button>
+    <div class="ov-toast" id="ovToast"></div>
+  </div>
+
+  <!-- URL import bar -->
+  <div class="ov-url-bar" id="ovUrlBar">
+    <div class="ov-url-inner">
+      <input class="ov-url-input" id="ovUrlInput" placeholder="Paste a URL to import as context (e.g. https://docs.example.com/api)" />
+      <button class="ov-url-fetch-btn" onclick="fetchOvURL()">Fetch</button>
+    </div>
+  </div>
+
+  <!-- URL Preview Card -->
+  <div class="ov-url-preview" id="ovUrlPreview">
+    <img class="ov-preview-img" id="ovPreviewImg" src="" alt="" />
+    <div class="ov-preview-text">
+      <div class="ov-preview-title" id="ovPreviewTitle"></div>
+      <div class="ov-preview-desc" id="ovPreviewDesc"></div>
+      <div class="ov-preview-domain" id="ovPreviewDomain"></div>
+    </div>
+    <div class="ov-preview-close" onclick="clearOvURLPreview()">✕</div>
+  </div>
+
+  <!-- Messages area -->
+  <div class="ov-messages" id="ovMessages">
+    <!-- Welcome state -->
+    <div class="ov-msg-wrap">
+      <div class="ov-welcome" id="ovWelcome">
+        <div class="ov-w-icon" id="ovWelcomeIcon">🤖</div>
+        <h3 id="ovWelcomeTitle">Start a conversation</h3>
+        <p id="ovWelcomeDesc">Ask anything. This AI is ready to help with writing, coding, analysis, and more — all in English.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typing indicator -->
+  <div id="ovTyping" style="display:none;padding:0 0 8px">
+    <div class="ov-typing">
+      <div class="ov-msg-avatar" id="ovTypingAvatar">G</div>
+      <div class="ov-typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input area -->
+  <div class="ov-input-area">
+    <div class="ov-input-wrap">
+      <textarea class="ov-chat-input" id="ovChatInput" placeholder="Message…" rows="1"></textarea>
+      <button class="ov-send-btn" id="ovSendBtn" onclick="sendOvMessage()" title="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7Z"/></svg>
+      </button>
+    </div>
+    <div class="ov-input-hint" id="ovHint">Press Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   AREA AI CHAT — Core engine
+   3 AI modes: ChatGPT, Claude, DeepSeek
+   Single tap → copy config | Double tap → open chat
+   Real AI responses via Anthropic API
+   URL import → context for chat
+═══════════════════════════════════════════════════════════ */
+
+(function () {
+
+  /* ── Configuration ─────────────────────────────────── */
+  const AI_CHAT_STORAGE = 'area-ai-chats-v2';
+
+  const AI_MODES = {
+    chatgpt: {
+      name: 'ChatGPT',
+      model: 'GPT-4o',
+      maker: 'OpenAI',
+      overlayClass: 'ov-gpt',
+      logoText: 'G',
+      welcomeIcon: '🟢',
+      welcomeTitle: 'ChatGPT is ready',
+      welcomeDesc: 'Direct, capable, and versatile. Ask anything — from creative writing to code.',
+      systemPrompt: `You are ChatGPT, a helpful and knowledgeable AI assistant made by OpenAI.
+You provide clear, direct, well-structured responses.
+You are friendly, accurate, and thorough in your answers.
+Always respond in English only. Be helpful, clear, and precise.
+When writing code, always use proper code blocks. Format your responses in Markdown.`,
+      configData: {
+        provider: 'openai',
+        model: 'gpt-4o',
+        temperature: 0.7,
+        max_tokens: 2048,
+        system: 'ChatGPT — Area integrated mode',
+        features: ['function_calling', 'vision', 'code_interpreter'],
+        context_window: 128000
+      }
+    },
+    claude: {
+      name: 'Claude',
+      model: 'Claude Sonnet',
+      maker: 'Anthropic',
+      overlayClass: 'ov-claude',
+      logoText: 'C',
+      welcomeIcon: '🟠',
+      welcomeTitle: 'Claude is ready',
+      welcomeDesc: 'Thoughtful and nuanced. Best for complex reasoning, writing, and careful analysis.',
+      systemPrompt: `You are Claude, an AI assistant made by Anthropic.
+You are thoughtful, nuanced, honest, and genuinely helpful.
+You provide well-reasoned, careful responses that are accurate and balanced.
+Always respond in English only. Be honest when you're uncertain.
+Format your responses in Markdown with clear structure when helpful.`,
+      configData: {
+        provider: 'anthropic',
+        model: 'claude-sonnet-4-6',
+        temperature: 0.7,
+        max_tokens: 2048,
+        system: 'Claude — Area integrated mode',
+        features: ['vision', 'extended_context', 'tool_use'],
+        context_window: 200000
+      }
+    },
+    deepseek: {
+      name: 'DeepSeek',
+      model: 'DeepSeek-R1',
+      maker: 'DeepSeek AI',
+      overlayClass: 'ov-ds',
+      logoText: 'D',
+      welcomeIcon: '🔵',
+      welcomeTitle: 'DeepSeek is ready',
+      welcomeDesc: 'Precision and depth. Excels at coding, math, and chain-of-thought reasoning.',
+      systemPrompt: `You are DeepSeek, an advanced AI assistant made by DeepSeek AI.
+You are highly capable at reasoning, mathematics, coding, and deep technical analysis.
+You provide technically precise, well-reasoned, and thorough responses.
+Always respond in English only. Show your reasoning when solving complex problems.
+Use Markdown formatting. For code, always use proper code blocks with language tags.`,
+      configData: {
+        provider: 'deepseek',
+        model: 'deepseek-reasoner',
+        temperature: 0.6,
+        max_tokens: 4096,
+        system: 'DeepSeek — Area integrated mode',
+        features: ['chain_of_thought', 'code_execution', 'math_solver'],
+        context_window: 64000
+      }
+    }
+  };
+
+  /* ── State ──────────────────────────────────────────── */
+  let chatState = {
+    activeMode: null,
+    histories: { chatgpt: [], claude: [], deepseek: [] },
+    urlContext: null,
+    isLoading: false
+  };
+
+  let tapTimers = {};
+
+  /* ── Load/save chat history ─────────────────────────── */
+  function loadChatHistory() {
+    try {
+      const raw = localStorage.getItem(AI_CHAT_STORAGE);
+      if (raw) {
+        const d = JSON.parse(raw);
+        chatState.histories = Object.assign({ chatgpt: [], claude: [], deepseek: [] }, d);
+      }
+    } catch (e) { /* silent */ }
+  }
+
+  function saveChatHistory() {
+    try {
+      localStorage.setItem(AI_CHAT_STORAGE, JSON.stringify(chatState.histories));
+    } catch (e) { /* silent */ }
+  }
+
+  /* ── Tap / double-tap detection ─────────────────────── */
+  window.handleAICardTap = function (mode) {
+    if (tapTimers[mode]) {
+      clearTimeout(tapTimers[mode]);
+      tapTimers[mode] = null;
+      // Double tap → open chat
+      openAIChat(mode);
+    } else {
+      // First tap → wait 280ms
+      tapTimers[mode] = setTimeout(function () {
+        tapTimers[mode] = null;
+        // Single tap → copy config
+        const cfg = AI_MODES[mode].configData;
+        navigator.clipboard.writeText(JSON.stringify(cfg, null, 2))
+          .then(() => {
+            if (typeof window.showToast === 'function') {
+              window.showToast(AI_MODES[mode].name + ' config copied!');
+            }
+          })
+          .catch(() => {
+            if (typeof window.showToast === 'function') {
+              window.showToast('Copied to clipboard');
+            }
+          });
+      }, 280);
+    }
+  };
+
+  /* ── Open chat overlay ──────────────────────────────── */
+  window.openAIChat = function (mode) {
+    const cfg = AI_MODES[mode];
+    const overlay = document.getElementById('aiOverlay');
+
+    chatState.activeMode = mode;
+
+    // Apply theme
+    overlay.className = 'ai-overlay open ' + cfg.overlayClass;
+
+    // Update header
+    document.getElementById('ovLogo').textContent = cfg.logoText;
+    document.getElementById('ovName').textContent = cfg.name;
+    document.getElementById('ovModel').textContent = cfg.model + ' · ' + cfg.maker;
+    document.getElementById('ovTypingAvatar').textContent = cfg.logoText;
+
+    // Update welcome state
+    document.getElementById('ovWelcomeIcon').textContent = cfg.welcomeIcon;
+    document.getElementById('ovWelcomeTitle').textContent = cfg.welcomeTitle;
+    document.getElementById('ovWelcomeDesc').textContent = cfg.welcomeDesc;
+
+    // Render existing history
+    renderChatHistory(mode);
+
+    // Focus input
+    setTimeout(function () {
+      document.getElementById('ovChatInput').focus();
+    }, 350);
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  };
+
+  /* ── Close chat overlay ─────────────────────────────── */
+  window.closeAIChat = function () {
+    const overlay = document.getElementById('aiOverlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    chatState.activeMode = null;
+  };
+
+  /* ── Clear current chat ─────────────────────────────── */
+  window.clearAIChat = function () {
+    const mode = chatState.activeMode;
+    if (!mode) return;
+    chatState.histories[mode] = [];
+    chatState.urlContext = null;
+    saveChatHistory();
+    renderChatHistory(mode);
+    clearOvURLPreview();
+    showOvToast('Chat cleared');
+  };
+
+  /* ── Toggle URL bar ─────────────────────────────────── */
+  window.toggleOvUrlBar = function () {
+    const bar = document.getElementById('ovUrlBar');
+    const btn = document.getElementById('ovUrlBtn');
+    const isOpen = bar.classList.contains('open');
+    bar.classList.toggle('open', !isOpen);
+    btn.classList.toggle('active', !isOpen);
+    if (!isOpen) {
+      document.getElementById('ovUrlInput').focus();
+    }
+  };
+
+  /* ── Fetch URL preview (overlay) ────────────────────── */
+  window.fetchOvURL = async function () {
+    const input = document.getElementById('ovUrlInput');
+    const url = input.value.trim();
+    if (!url || !url.startsWith('http')) {
+      showOvToast('Enter a valid URL starting with http');
+      return;
+    }
+    showOvToast('Fetching preview…');
+    const data = await fetchURLMeta(url);
+    displayOvURLPreview(data, url);
+    chatState.urlContext = data;
+    document.getElementById('ovUrlBar').classList.remove('open');
+    document.getElementById('ovUrlBtn').classList.remove('active');
+    showOvToast('URL added as context');
+  };
+
+  function displayOvURLPreview(data, url) {
+    const preview = document.getElementById('ovUrlPreview');
+    document.getElementById('ovPreviewTitle').textContent = data.title || url;
+    document.getElementById('ovPreviewDesc').textContent = data.description || 'No description available.';
+    try {
+      document.getElementById('ovPreviewDomain').textContent = new URL(url).hostname;
+    } catch (e) {
+      document.getElementById('ovPreviewDomain').textContent = url;
+    }
+    const img = document.getElementById('ovPreviewImg');
+    if (data.image) {
+      img.src = data.image;
+      img.style.display = 'block';
+    } else {
+      img.style.display = 'none';
+    }
+    preview.classList.add('visible');
+  }
+
+  window.clearOvURLPreview = function () {
+    document.getElementById('ovUrlPreview').classList.remove('visible');
+    document.getElementById('ovUrlInput').value = '';
+    chatState.urlContext = null;
+  };
+
+  /* ── Fetch URL metadata via microlink.io ────────────── */
+  async function fetchURLMeta(url) {
+    try {
+      const resp = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+      const json = await resp.json();
+      if (json.status === 'success') {
+        return {
+          title: json.data.title || '',
+          description: json.data.description || '',
+          image: (json.data.image && json.data.image.url) || null,
+          url: url
+        };
+      }
+    } catch (e) { /* silent */ }
+    // Fallback: parse the URL title from pathname
+    try {
+      const u = new URL(url);
+      return {
+        title: u.hostname + u.pathname,
+        description: 'Could not fetch page preview.',
+        image: null,
+        url: url
+      };
+    } catch (e) {
+      return { title: url, description: 'Could not fetch page preview.', image: null, url: url };
+    }
+  }
+
+  /* ── URL import on page-ai ──────────────────────────── */
+  window.fetchAndPreviewURL = async function () {
+    const input = document.getElementById('aiUrlInput');
+    const url = input.value.trim();
+    if (!url || !url.startsWith('http')) {
+      if (typeof window.showToast === 'function') window.showToast('Enter a valid URL');
+      return;
+    }
+    if (typeof window.showToast === 'function') window.showToast('Fetching preview…');
+    const data = await fetchURLMeta(url);
+    const container = document.getElementById('aiUrlResults');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.innerHTML = '';
+
+    const card = document.createElement('div');
+    card.className = 'url-result-card';
+    const imgHtml = data.image
+      ? `<img class="url-result-thumb" src="${data.image}" alt="" onerror="this.style.display='none'" />`
+      : '';
+    let domain = '';
+    try { domain = new URL(url).hostname; } catch (e) { domain = url; }
+    card.innerHTML = `
+      ${imgHtml}
+      <div class="url-result-info">
+        <div class="url-result-title">${escapeHTML(data.title || url)}</div>
+        <div class="url-result-desc">${escapeHTML(data.description || 'No description available.')}</div>
+        <div class="url-result-domain">${escapeHTML(domain)}</div>
+        <div class="url-result-actions">
+          <button class="btn soft" style="font-size:12px;padding:7px 11px" onclick="openAIWithURL('chatgpt', ${JSON.stringify(url).replace(/'/g, '&#39;')})">Chat in ChatGPT</button>
+          <button class="btn soft" style="font-size:12px;padding:7px 11px" onclick="openAIWithURL('claude', ${JSON.stringify(url).replace(/'/g, '&#39;')})">Chat in Claude</button>
+          <button class="btn soft" style="font-size:12px;padding:7px 11px" onclick="openAIWithURL('deepseek', ${JSON.stringify(url).replace(/'/g, '&#39;')})">Chat in DeepSeek</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+    if (typeof window.showToast === 'function') window.showToast('Preview ready!');
+  };
+
+  window.openAIWithURL = async function (mode, url) {
+    const data = await fetchURLMeta(url);
+    openAIChat(mode);
+    setTimeout(function () {
+      chatState.urlContext = data;
+      displayOvURLPreview(data, url);
+    }, 400);
+  };
+
+  /* ── Render chat history ────────────────────────────── */
+  function renderChatHistory(mode) {
+    const container = document.getElementById('ovMessages');
+    const welcome = document.getElementById('ovWelcome');
+    const history = chatState.histories[mode] || [];
+
+    // Clear all messages except welcome
+    const existingMsgs = container.querySelectorAll('.ov-msg-wrap[data-msg]');
+    existingMsgs.forEach(el => el.remove());
+    document.getElementById('ovTyping').style.display = 'none';
+
+    if (history.length === 0) {
+      welcome.parentElement.style.display = '';
+      return;
+    }
+    welcome.parentElement.style.display = 'none';
+
+    history.forEach(function (msg) {
+      appendMessageToDOM(msg.role, msg.content, false);
+    });
+
+    // Scroll to bottom
+    setTimeout(function () {
+      container.scrollTop = container.scrollHeight;
+    }, 50);
+  }
+
+  /* ── Append a message bubble to DOM ─────────────────── */
+  function appendMessageToDOM(role, content, scroll) {
+    const container = document.getElementById('ovMessages');
+    const welcome = document.getElementById('ovWelcome');
+
+    // Hide welcome
+    if (welcome && welcome.parentElement) {
+      welcome.parentElement.style.display = 'none';
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'ov-msg-wrap';
+    wrap.setAttribute('data-msg', '1');
+
+    const msg = document.createElement('div');
+    msg.className = 'ov-msg ' + (role === 'user' ? 'user' : 'ai');
+
+    const cfg = AI_MODES[chatState.activeMode] || {};
+    const avatarText = role === 'user' ? 'You' : (cfg.logoText || 'AI');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'ov-msg-avatar';
+    avatar.textContent = role === 'user' ? 'U' : (cfg.logoText || 'A');
+
+    const bubble = document.createElement('div');
+    bubble.className = 'ov-msg-bubble';
+    if (role === 'user') {
+      bubble.textContent = content;
+    } else {
+      bubble.innerHTML = renderMarkdown(content);
+    }
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    wrap.appendChild(msg);
+    container.insertBefore(wrap, document.getElementById('ovTyping'));
+
+    if (scroll !== false) {
+      setTimeout(function () {
+        container.scrollTop = container.scrollHeight;
+      }, 50);
+    }
+  }
+
+  /* ── Simple Markdown renderer ───────────────────────── */
+  function renderMarkdown(text) {
+    let s = escapeHTML(text);
+
+    // Code blocks (must come first)
+    s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, function (_, lang, code) {
+      return '<pre><code class="lang-' + (lang || 'text') + '">' + code.trim() + '</code></pre>';
+    });
+
+    // Inline code
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Bold
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+    // Italic
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // Headers
+    s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Blockquotes
+    s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Ordered lists
+    s = s.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    s = s.replace(/(<li>.*<\/li>\n?)+/g, '<ol>$&</ol>');
+
+    // Unordered lists
+    s = s.replace(/^[*\-] (.+)$/gm, '<li>$1</li>');
+    s = s.replace(/(<li>.*<\/li>\n?)+/g, function (match) {
+      if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
+      return match;
+    });
+
+    // Horizontal rule
+    s = s.replace(/^---$/gm, '<hr>');
+
+    // Paragraphs (double newlines)
+    s = s.replace(/\n\n+/g, '</p><p>');
+    s = '<p>' + s + '</p>';
+
+    // Single newlines → br
+    s = s.replace(/([^>])\n([^<])/g, '$1<br>$2');
+
+    // Clean up empty paragraphs
+    s = s.replace(/<p>\s*<\/p>/g, '');
+    s = s.replace(/<p>(<(?:pre|ul|ol|h[1-6]|blockquote|hr))/g, '$1');
+    s = s.replace(/(<\/(?:pre|ul|ol|h[1-6]|blockquote)>)<\/p>/g, '$1');
+
+    return s;
+  }
+
+  /* ── Show/hide typing indicator ─────────────────────── */
+  function showTyping() {
+    document.getElementById('ovTyping').style.display = '';
+    const container = document.getElementById('ovMessages');
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function hideTyping() {
+    document.getElementById('ovTyping').style.display = 'none';
+  }
+
+  /* ── Send message ───────────────────────────────────── */
+  window.sendOvMessage = async function () {
+    const mode = chatState.activeMode;
+    if (!mode || chatState.isLoading) return;
+
+    const input = document.getElementById('ovChatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Add to history
+    chatState.histories[mode].push({ role: 'user', content: text });
+    appendMessageToDOM('user', text, true);
+    input.value = '';
+    input.style.height = 'auto';
+    saveChatHistory();
+
+    // Disable send btn + show typing
+    chatState.isLoading = true;
+    document.getElementById('ovSendBtn').disabled = true;
+    showTyping();
+
+    // Build messages for API
+    const history = chatState.histories[mode].slice(-20); // last 20 messages
+    const apiMessages = history.map(function (m) {
+      return { role: m.role, content: m.content };
+    });
+
+    // Build system prompt (include URL context if available)
+    let systemPrompt = AI_MODES[mode].systemPrompt;
+    if (chatState.urlContext) {
+      systemPrompt += '\n\nURL CONTEXT — The user has imported the following page for reference:\nTitle: ' +
+        (chatState.urlContext.title || '') + '\nURL: ' + (chatState.urlContext.url || '') +
+        '\nDescription: ' + (chatState.urlContext.description || '') +
+        '\n\nUse this as context when relevant to answer the user\'s questions.';
+    }
+
+    // Call AI
+    let reply = '';
+    try {
+      reply = await callAnthropicAPI(mode, apiMessages, systemPrompt);
+    } catch (e) {
+      reply = 'Sorry, I ran into an error connecting to the AI. Please try again.';
+    }
+
+    hideTyping();
+    chatState.isLoading = false;
+    document.getElementById('ovSendBtn').disabled = false;
+
+    // Add AI reply to history and DOM
+    chatState.histories[mode].push({ role: 'assistant', content: reply });
+    appendMessageToDOM('assistant', reply, true);
+    saveChatHistory();
+  };
+
+  /* ── Anthropic API call ─────────────────────────────── */
+  async function callAnthropicAPI(mode, messages, systemPrompt) {
+    // 1. Try backend proxy (for Vercel production deployment)
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: mode, messages: messages, system: systemPrompt })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        return data.content || data.message || 'No response.';
+      }
+    } catch (e) { /* backend not available, try direct */ }
+
+    // 2. Direct Anthropic API (works in claude.ai artifact environment)
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: messages
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + resp.status);
+    }
+
+    const data = await resp.json();
+    const content = data.content || [];
+    const textBlock = content.find(function (c) { return c.type === 'text'; });
+    return textBlock ? textBlock.text : 'No response.';
+  }
+
+  /* ── Escape HTML helper ─────────────────────────────── */
+  function escapeHTML(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /* ── Overlay toast ──────────────────────────────────── */
+  function showOvToast(msg) {
+    const t = document.getElementById('ovToast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showOvToast._t);
+    showOvToast._t = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  /* ── Chat input auto-resize ─────────────────────────── */
+  document.getElementById('ovChatInput').addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  document.getElementById('ovChatInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendOvMessage();
+    }
+  });
+
+  /* ── URL input on overlay ───────────────────────────── */
+  document.getElementById('ovUrlInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') fetchOvURL();
+  });
+
+  /* ── Keyboard shortcut: Escape closes overlay ───────── */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('aiOverlay');
+      if (overlay && overlay.classList.contains('open')) {
+        closeAIChat();
+      }
+    }
+  });
+
+  /* ── Init ───────────────────────────────────────────── */
+  loadChatHistory();
+
+})();
+</script>
+
+</body>
